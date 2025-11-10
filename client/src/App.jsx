@@ -10,6 +10,7 @@ import MyEvents from './pages/myEvents';
 import Register from './pages/Register';
 import Registrations  from './pages/Registrations';
 import Chatbot from './components/Chatbot';
+import Dashboard  from './pages/Dashboard';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/myEvents" element={<MyEvents />} />
         <Route path="/register/:eventId" element={<Register />} />
         <Route path="/registrations/:eventId" element={<Registrations />} />
+        <Route path="/dashboard" element={<Dashboard />} />
       </Routes>
       <Chatbot />
     </Router>

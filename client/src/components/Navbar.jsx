@@ -29,7 +29,11 @@ const Navbar = () => {
         {/* Logo/Brand */}
         <div className="flex items-center space-x-3">
           <Link to="/" className="flex items-center space-x-3 group">
-            <img src="/eventhub.png" alt="EventHub Logo" className="w-8 h-8 rounded-lg" />
+            <img
+              src="/eventhub.png"
+              alt="EventHub Logo"
+              className="w-8 h-8 rounded-lg"
+            />
             {/* <span className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
               EventHub
             </span> */}
@@ -38,11 +42,17 @@ const Navbar = () => {
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-8">
-          <Link to="/" className="text-slate-300 hover:text-white font-medium transition-colors duration-200 relative group">
+          <Link
+            to="/"
+            className="text-slate-300 hover:text-white font-medium transition-colors duration-200 relative group"
+          >
             Home
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all group-hover:w-full"></span>
           </Link>
-          <Link to="/events" className="text-slate-300 hover:text-white font-medium transition-colors duration-200 relative group">
+          <Link
+            to="/events"
+            className="text-slate-300 hover:text-white font-medium transition-colors duration-200 relative group"
+          >
             Events
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all group-hover:w-full"></span>
           </Link>
@@ -60,17 +70,27 @@ const Navbar = () => {
                   className="flex items-center space-x-3 px-3 py-2 rounded-lg hover:bg-slate-800 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-full flex items-center justify-center text-sm font-semibold">
-                    {user.username?.charAt(0).toUpperCase() || user.name?.charAt(0).toUpperCase() || "U"}
+                    {user.username?.charAt(0).toUpperCase() ||
+                      user.name?.charAt(0).toUpperCase() ||
+                      "U"}
                   </div>
-                  <span className="font-medium text-slate-200">{user.username || user.name}</span>
+                  <span className="font-medium text-slate-200">
+                    {user.username || user.name}
+                  </span>
                   <svg
-                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${profileOpen ? "rotate-180" : ""}`}
+                    className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                      profileOpen ? "rotate-180" : ""
+                    }`}
                     fill="none"
                     stroke="currentColor"
                     strokeWidth="2"
                     viewBox="0 0 24 24"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M19 9l-7 7-7-7"
+                    />
                   </svg>
                 </button>
                 {profileOpen && (
@@ -137,9 +157,17 @@ const Navbar = () => {
               viewBox="0 0 24 24"
             >
               {menuOpen ? (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               ) : (
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
               )}
             </svg>
           </button>

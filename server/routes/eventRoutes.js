@@ -12,4 +12,4 @@ router.put("/:id",authMiddleware,uploads.single('image'),updateEvent);
 router.post('/register', registerForEvent);
 router.get('/registrations/:eventId',getEventRegistrations);
 
-export default router;6
+export default router;
