@@ -14,7 +14,7 @@ const Dashboard = () => {
       navigate("/login");
       return;
     }
-    API.get("/events/my-registrations", {
+    API.get("/events/registrations", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => setRegs(res.data))

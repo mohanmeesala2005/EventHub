@@ -56,6 +56,13 @@ const Navbar = () => {
             Events
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all group-hover:w-full"></span>
           </Link>
+          <Link
+            to="/dashboard"
+            className="text-slate-300 hover:text-white font-medium transition-colors duration-200 relative group"
+          >
+            Dashboard
+            <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all group-hover:w-full"></span>
+          </Link>
           {user ? (
             <>
               <Link
