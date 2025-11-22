@@ -6,7 +6,7 @@ import path from 'path';
 // Create Event
 export const createEvent = async (req, res) => {
   try {
-    const { title, description, date,cost, createdBy, createdByName, createdByEmail } = req.body;
+    const { title, description, date, cost, createdBy, createdByName, createdByEmail } = req.body;
     let imagePath = '';
     if (req.file) {
       imagePath = req.file.path.replace(/\\/g, '/');
@@ -45,11 +45,11 @@ export const deleteEvent = async (req, res) => {
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
     }
-    if(event.image){
-      const imagePath= path.join(process.cwd(),event.image);
-      fs.unlink(imagePath,(err) => {
-        if(err){
-          console.error('Failed to delete image line:',err);
+    if (event.image) {
+      const imagePath = path.join(process.cwd(), event.image);
+      fs.unlink(imagePath, (err) => {
+        if (err) {
+          console.error('Failed to delete image line:', err);
         }
       })
     }
@@ -60,9 +60,9 @@ export const deleteEvent = async (req, res) => {
   }
 };
 
-export const updateEvent = async(req,res) => {
-  try{
-   const { title, description, date,cost } = req.body;
+export const updateEvent = async (req, res) => {
+  try {
+    const { title, description, date, cost } = req.body;
     const event = await Event.findById(req.params.id);
     if (!event) {
       return res.status(404).json({ message: "Event not found" });
@@ -91,14 +91,15 @@ export const updateEvent = async(req,res) => {
   }
 };
 
-export const registerForEvent = async(req,res) => {
-  try{
-    const {eventId,name,email,phone} = req.body;
-    const registration = new EventRegistration({eventId,name,email,phone});
+export const registerForEvent = async (req, res) => {
+  try {
+    const { eventId, name, email, phone } = req.body;
+    const userId = req.user.id; // Get userId from authenticated user
+    const registration = new EventRegistration({ eventId, userId, name, email, phone });
     await registration.save();
-    res.status(201).json({message:'Registerd Successfully'});
-  }catch(err){
-    res.status(500).json({message:'Registration Failed'});
+    res.status(201).json({ message: 'Registered Successfully' });
+  } catch (err) {
+    res.status(500).json({ message: 'Registration Failed', error: err.message });
   }
 };
 
@@ -109,5 +110,18 @@ export const getEventRegistrations = async (req, res) => {
     res.json(registrations);
   } catch (err) {
     res.status(500).json({ message: 'Failed to fetch registrations' });
+  }
+};
+
+// Get registrations for the logged-in user
+export const getUserRegistrations = async (req, res) => {
+  try {
+    const userId = req.user.id; // Get userId from authenticated user
+    const registrations = await EventRegistration.find({ userId })
+      .populate('eventId') // Populate event details
+      .sort({ createdAt: -1 }); // Most recent first
+    res.json(registrations);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch user registrations', error: err.message });
   }
 };
