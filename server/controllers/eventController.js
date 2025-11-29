@@ -125,3 +125,38 @@ export const getUserRegistrations = async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch user registrations', error: err.message });
   }
 };
+
+// Admin: Get all events with registration statistics
+export const getAllEventsWithStats = async (req, res) => {
+  try {
+    const events = await Event.find().sort({ date: 1 });
+
+    // Get registration counts for each event
+    const eventsWithStats = await Promise.all(
+      events.map(async (event) => {
+        const registrationCount = await EventRegistration.countDocuments({ eventId: event._id });
+        return {
+          ...event.toObject(),
+          registrationCount
+        };
+      })
+    );
+
+    res.json(eventsWithStats);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch events with stats', error: err.message });
+  }
+};
+
+// Admin: Get all registrations across all events
+export const getAllRegistrations = async (req, res) => {
+  try {
+    const registrations = await EventRegistration.find()
+      .populate('eventId')
+      .populate('userId', 'name email username')
+      .sort({ createdAt: -1 });
+    res.json(registrations);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch all registrations', error: err.message });
+  }
+};

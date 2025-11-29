@@ -41,6 +41,27 @@ const Events = () => {
     setSearchQuery(e.target.value);
   };
 
+  const handleDeleteEvent = async (eventId, eventTitle) => {
+    if (!window.confirm(`Are you sure you want to delete "${eventTitle}"?`)) {
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    try {
+      await API.delete(`/events/${eventId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      
+      // Remove from state
+      setEvents(events.filter((e) => e._id !== eventId));
+      setFilteredEvents(filteredEvents.filter((e) => e._id !== eventId));
+      alert("Event deleted successfully!");
+    } catch (err) {
+      console.error("Failed to delete event:", err);
+      alert("Failed to delete event. Please try again.");
+    }
+  };
+
   if (loading) return <Preloader />;
 
   let user = null;
@@ -149,18 +170,45 @@ const Events = () => {
                 <p className="text-xs text-gray-400 mb-3">
                   {new Date(event.date).toLocaleString()}
                 </p>
-                {event.createdByName !== user?.username && user ? (
-                  <button
-                    className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg font-semibold shadow hover:from-green-500 hover:to-blue-500 transition-colors duration-300"
-                    onClick={() => navigate(`/register/${event._id}`)}
-                  >
-                    Register
-                  </button>
-                ) : (
-                  <span className="text-xs text-green-600 font-semibold mt-2">
-                    {user ? "Your Event" : ""}
-                  </span>
-                )}
+                
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  {event.createdByName !== user?.username && user ? (
+                    <button
+                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg font-semibold shadow hover:from-green-500 hover:to-blue-500 transition-colors duration-300"
+                      onClick={() => navigate(`/register/${event._id}`)}
+                    >
+                      Register
+                    </button>
+                  ) : (
+                    <span className="text-xs text-green-600 font-semibold mt-2">
+                      {user ? "Your Event" : ""}
+                    </span>
+                  )}
+                  
+                  {/* Admin Delete Button */}
+                  {user?.role === 'admin' && (
+                    <button
+                      onClick={() => handleDeleteEvent(event._id, event.title)}
+                      className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold shadow transition-colors duration-300"
+                      title="Delete Event (Admin)"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                </div>
               </div>
             ))}
           </div>

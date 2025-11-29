@@ -63,6 +63,15 @@ const Navbar = () => {
             Dashboard
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all group-hover:w-full"></span>
           </Link>
+          {user?.role === 'admin' && (
+            <Link
+              to="/admin/dashboard"
+              className="text-slate-300 hover:text-white font-medium transition-colors duration-200 relative group"
+            >
+              Admin Dashboard
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-purple-400 transition-all group-hover:w-full"></span>
+            </Link>
+          )}
           {user ? (
             <>
               <Link
@@ -81,9 +90,14 @@ const Navbar = () => {
                       user.name?.charAt(0).toUpperCase() ||
                       "U"}
                   </div>
-                  <span className="font-medium text-slate-200">
-                    {user.username || user.name}
-                  </span>
+                  <div className="flex flex-col">
+                    <span className="font-medium text-slate-200">
+                      {user.username || user.name}
+                    </span>
+                    {user.role === 'admin' && (
+                      <span className="text-xs text-purple-400 font-semibold">Admin</span>
+                    )}
+                  </div>
                   <svg
                     className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
                       profileOpen ? "rotate-180" : ""
@@ -199,6 +213,22 @@ const Navbar = () => {
             >
               Events
             </Link>
+            <Link
+              to="/dashboard"
+              className="block px-3 py-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white font-medium transition-colors"
+              onClick={() => setMenuOpen(false)}
+            >
+              Dashboard
+            </Link>
+            {user?.role === 'admin' && (
+              <Link
+                to="/admin/dashboard"
+                className="block px-3 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors"
+                onClick={() => setMenuOpen(false)}
+              >
+                Admin Dashboard
+              </Link>
+            )}
             {user ? (
               <>
                 <Link
