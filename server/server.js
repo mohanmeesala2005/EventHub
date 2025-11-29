@@ -31,10 +31,22 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
 const PORT = process.env.PORT || 5000;
 
+// Validate required environment variables
+const requiredEnv = ['MONGO_URI', 'JWT_SECRET'];
+const missing = requiredEnv.filter((k) => !process.env[k]);
+if (missing.length > 0) {
+  console.error(
+    `Missing required environment variables: ${missing.join(', ')}.\nPlease create a .env file (see server/.env.sample) and set these values.`
+  );
+  process.exit(1);
+}
+
 mongoose
-  .connect(process.env.MONGO_URI, {
-  })
+  .connect(process.env.MONGO_URI, {})
   .then(() => {
     app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
   })
-  .catch((err) => console.error('MongoDB connection failed:', err));
+  .catch((err) => {
+    console.error('MongoDB connection failed:', err);
+    process.exit(1);
+  });
