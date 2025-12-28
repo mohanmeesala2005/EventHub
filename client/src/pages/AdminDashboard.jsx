@@ -17,7 +17,7 @@ const AdminDashboard = () => {
 
     // Check if user is admin
     if (!token || user.role !== "admin") {
-      navigate("/");
+      navigate("/login");
       return;
     }
 
@@ -211,7 +211,7 @@ const AdminDashboard = () => {
               placeholder="Search events by title, creator..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 pl-12 rounded-xl bg-white bg-opacity-10 backdrop-blur-md border border-purple-300 border-opacity-30 text-white placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              className="w-full px-4 py-3 pl-12 rounded-xl bg-white bg-opacity-10 backdrop-blur-md border border-purple-300 border-opacity-30 text-black placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             <svg
               className="absolute left-4 top-3.5 w-5 h-5 text-purple-200"
@@ -258,7 +258,7 @@ const AdminDashboard = () => {
               <tbody className="divide-y divide-purple-300 divide-opacity-20">
                 {filteredEvents.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-purple-200">
+                    <td colSpan="6" className="px-6 py-12 text-center text-black">
                       {searchQuery ? "No events match your search." : "No events found."}
                     </td>
                   </tr>
@@ -266,7 +266,7 @@ const AdminDashboard = () => {
                   filteredEvents.map((event) => (
                     <tr
                       key={event._id}
-                      className="hover:bg-purple-800 hover:bg-opacity-30 transition-colors"
+                      className="hover:bg-purple-300 hover:bg-opacity-10 transition-colors"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
@@ -281,19 +281,19 @@ const AdminDashboard = () => {
                             />
                           )}
                           <div>
-                            <p className="text-white font-semibold">{event.title}</p>
-                            <p className="text-purple-200 text-sm line-clamp-1">
+                            <p className="text-black font-semibold">{event.title}</p>
+                            <p className="text-black-200 text-sm line-clamp-1">
                               {event.description}
                             </p>
                           </div>
                         </div>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-white text-sm">{event.createdByName}</p>
-                        <p className="text-purple-200 text-xs">{event.createdByEmail}</p>
+                        <p className="text-black text-sm">{event.createdByName}</p>
+                        <p className="text-black-200 text-xs">{event.createdByEmail}</p>
                       </td>
                       <td className="px-6 py-4">
-                        <p className="text-white text-sm">{formatDate(event.date)}</p>
+                        <p className="text-black text-sm">{formatDate(event.date)}</p>
                       </td>
                       <td className="px-6 py-4">
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500 bg-opacity-20 text-green-200">
@@ -308,7 +308,7 @@ const AdminDashboard = () => {
                       <td className="px-6 py-4">
                         <button
                           onClick={() => handleDeleteEvent(event._id, event.title)}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors shadow-lg"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-black rounded-lg font-medium transition-colors shadow-lg"
                         >
                           <svg
                             className="w-4 h-4"
