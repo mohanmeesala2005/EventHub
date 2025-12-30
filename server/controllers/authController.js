@@ -7,7 +7,22 @@ export const registerUser = async (req, res) => {
   try {
     const existingUser = await User.findOne({ email });
     const existingUsername = await User.findOne({username});
-    if (existingUser) return res.status(400).json({ message: 'User already exists' });
+    if (existingUser) {
+      const token = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_SECRET, {
+      expiresIn: '1d',
+      });
+      return res.status(200).json({ 
+      token, 
+      user: { 
+        id: existingUser._id, 
+        username: existingUser.username,
+        name: existingUser.name, 
+        email: existingUser.email, 
+        role: existingUser.role 
+      },
+      message: 'User already exists, redirecting to home' 
+      });
+    }
 
     if(existingUsername) return res.status(400).json({message:"Username already exists"})
 

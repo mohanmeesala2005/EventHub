@@ -24,7 +24,7 @@ const listUsers = async () => {
         users.forEach((user, index) => {
             console.log(`${index + 1}. ${user.name} (@${user.username})`);
             console.log(`   Email: ${user.email}`);
-            console.log(`   Role:  ${user.role}${user.role === 'admin' ? ' 👑' : ''}`);
+            console.log(`   Role:  ${user.role}`);
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         });
 
