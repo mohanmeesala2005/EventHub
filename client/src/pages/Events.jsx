@@ -75,11 +75,11 @@ const Events = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header with Title and Search Bar */}
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
-          <h1 className="text-3xl font-extrabold text-gray-800 tracking-tight">
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">
             Upcoming Events
           </h1>
 
@@ -90,7 +90,7 @@ const Events = () => {
               placeholder="Search events..."
               value={searchQuery}
               onChange={handleSearchChange}
-              className="w-full px-4 py-3 pl-10 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg"
+              className="w-full px-4 py-3 pl-10 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-lg text-white"
             />
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <svg
@@ -170,7 +170,7 @@ const Events = () => {
                 <p className="text-xs text-gray-400 mb-3">
                   {new Date(event.date).toLocaleString()}
                 </p>
-                
+
                 {/* Action Buttons */}
                 <div className="flex gap-2">
                   {event.createdByName !== user?.username && user ? (
@@ -185,9 +185,9 @@ const Events = () => {
                       {user ? "Your Event" : ""}
                     </span>
                   )}
-                  
+
                   {/* Admin Delete Button */}
-                  {user?.role === 'admin' && (
+                  {user?.role === "admin" && (
                     <button
                       onClick={() => handleDeleteEvent(event._id, event.title)}
                       className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold shadow transition-colors duration-300"

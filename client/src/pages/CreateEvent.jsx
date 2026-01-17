@@ -58,6 +58,10 @@ function CreateEvent() {
         setMessage('Invalid token. Please login again.');
         return;
       }
+      if(formData.date < new Date().toISOString().split('T')[0]){
+        setMessage('Event date cannot be in the past.');
+        return;
+      }
       const response = await API.post('/events/create', data ,{
         headers: {
           Authorization: `Bearer ${token}`,
