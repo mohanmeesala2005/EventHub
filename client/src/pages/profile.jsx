@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -40,10 +41,32 @@ const Profile = () => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSaveProfile = () => {
-        localStorage.setItem('user', JSON.stringify(formData));
-        setUser(formData);
-        setIsEditing(false);
+    const handleSaveProfile = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await axios.post('http://localhost:5000/api/auth/update', 
+                { 
+                    name: formData.name, 
+                    username: formData.username 
+                }, 
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            if (response.status === 200) {
+                const updatedUser = response.data.user;
+                localStorage.setItem('user', JSON.stringify(updatedUser));
+                setUser(updatedUser);
+                setIsEditing(false);
+                alert('Profile updated successfully!');
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            alert(error.response?.data?.message || 'Failed to update profile');
+        }
     };
 
     return (
