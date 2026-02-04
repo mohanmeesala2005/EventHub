@@ -155,9 +155,6 @@ const Events = () => {
                   <span className="font-semibold">
                     {event.createdByName || "Unknown"}
                   </span>
-                  <span className="ml-2 text-xs text-gray-400">
-                    ({event.createdByEmail || "No Email"})
-                  </span>
                 </p>
                 <p className="text-gray-600 flex-1 mb-2 line-clamp-3">
                   {event.description}
