@@ -16,8 +16,6 @@ const makeAdmin = async () => {
 
         if (!email) {
             console.log('\n Please provide an email address');
-            console.log('Usage: node makeAdmin.js <email>');
-            console.log('Example: node makeAdmin.js user@example.com\n');
             process.exit(1);
         }
 
