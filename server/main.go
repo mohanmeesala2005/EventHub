@@ -24,27 +24,18 @@ func main() {
 	allowedOrigins := []string{
 		"http://localhost:3000",
 		"http://localhost:5173",
-<<<<<<< HEAD
-=======
 		// Some dev setups use 127.0.0.1 instead of localhost — include it to avoid CORS issues.
 		"http://127.0.0.1:5173",
->>>>>>> de62ada (Code fixes regarding vite login issue)
 	}
 	// Add the Vercel frontend URL from env if set (e.g. https://your-app.vercel.app)
 	if cfg.FrontendURL != "" {
 		allowedOrigins = append(allowedOrigins, cfg.FrontendURL)
 	}
 	r.Use(cors.New(cors.Config{
-<<<<<<< HEAD
-		AllowOrigins:     allowedOrigins,
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Authorization", "Content-Type"},
-=======
 		AllowOrigins: allowedOrigins,
 		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		// Allow common request headers including Origin and Accept for preflight requests
 		AllowHeaders:     []string{"Origin", "Accept", "Authorization", "Content-Type"},
->>>>>>> de62ada (Code fixes regarding vite login issue)
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 	}))
