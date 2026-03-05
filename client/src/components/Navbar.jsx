@@ -30,7 +30,7 @@ const Navbar = () => {
         <div className="flex items-center space-x-3">
           <Link to="/" className="flex items-center space-x-3 group">
             <img
-              src="/eventhub.png"
+              src="/eventHub_logo.png"
               alt="EventHub Logo"
               className="w-8 h-8 rounded-lg"
             />
@@ -63,7 +63,7 @@ const Navbar = () => {
             Dashboard
             <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-400 transition-all group-hover:w-full"></span>
           </Link>
-          {user?.role === 'admin' && (
+          {user?.role === "admin" && (
             <Link
               to="/admin/dashboard"
               className="text-slate-300 hover:text-white font-medium transition-colors duration-200 relative group"
@@ -94,8 +94,10 @@ const Navbar = () => {
                     <span className="font-medium text-slate-200">
                       {user.username || user.name}
                     </span>
-                    {user.role === 'admin' && (
-                      <span className="text-xs text-purple-400 font-semibold">Admin</span>
+                    {user.role === "admin" && (
+                      <span className="text-xs text-purple-400 font-semibold">
+                        Admin
+                      </span>
                     )}
                   </div>
                   <svg
@@ -220,7 +222,7 @@ const Navbar = () => {
             >
               Dashboard
             </Link>
-            {user?.role === 'admin' && (
+            {user?.role === "admin" && (
               <Link
                 to="/admin/dashboard"
                 className="block px-3 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors"
