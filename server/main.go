@@ -20,9 +20,17 @@ func main() {
 	// 3. Initialize Gin router with Logger and Recovery middleware
 	r := gin.Default()
 
-	// 4. Apply CORS middleware — allows requests from the React dev server
+	// 4. Apply CORS middleware — allows requests from localhost and Vercel
+	allowedOrigins := []string{
+		"http://localhost:3000",
+		"http://localhost:5173",
+	}
+	// Add the Vercel frontend URL from env if set (e.g. https://your-app.vercel.app)
+	if cfg.FrontendURL != "" {
+		allowedOrigins = append(allowedOrigins, cfg.FrontendURL)
+	}
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://localhost:5173"},
+		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Authorization", "Content-Type"},
 		ExposeHeaders:    []string{"Content-Length"},

@@ -13,6 +13,7 @@ type Config struct {
 	DatabaseURL  string
 	JWTSecret    string
 	GeminiAPIKey string
+	FrontendURL  string // e.g. https://your-app.vercel.app
 }
 
 // Load reads the .env file and returns a populated Config struct.
@@ -26,6 +27,7 @@ func Load() *Config {
 		DatabaseURL:  getEnv("DATABASE_URL", ""),
 		JWTSecret:    getEnv("JWT_SECRET", ""),
 		GeminiAPIKey: getEnv("GEMINI_API_KEY", ""),
+		FrontendURL:  getEnv("FRONTEND_URL", ""),
 	}
 
 	if cfg.DatabaseURL == "" {
