@@ -18,7 +18,6 @@ WORKDIR /app
 
 # Copy binary and env file
 COPY --from=builder /app/main .
-COPY .env .
 
 # Create uploads directory so volume mounts work
 RUN mkdir -p uploads
