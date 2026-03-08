@@ -3,7 +3,7 @@ import API from "../api/axios";
 import Preloader from "../components/Preloader";
 import { useNavigate } from "react-router-dom";
 
-const signUp = () => {
+const SignUp = () => {
   const [form, setForm] = useState({
     username: "",
     name: "",
@@ -111,4 +111,4 @@ const signUp = () => {
   );
 };
 
-export default signUp;
+export default SignUp;
