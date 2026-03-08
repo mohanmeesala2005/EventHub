@@ -191,23 +191,33 @@ func (h *EventHandler) UpdateEvent(c *gin.Context) {
 // RegisterForEvent handles POST /api/events/register (protected)
 func (h *EventHandler) RegisterForEvent(c *gin.Context) {
 	var input struct {
-		EventID uint   `json:"eventId" binding:"required"`
-		Name    string `json:"name"`
-		Email   string `json:"email"`
-		Phone   string `json:"phone"`
+		EventID   uint   `json:"eventId" binding:"required"`
+		Name      string `json:"name"`
+		Email     string `json:"email"`
+		Phone     string `json:"phone"`
+		PaymentID string `json:"paymentId"`
 	}
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"message": err.Error()})
 		return
 	}
 
+	// Fetch event details to get the cost.
+	var event models.Event
+	if err := h.DB.First(&event, input.EventID).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"message": "Event not found"})
+		return
+	}
+
 	userID := getUserID(c)
 	registration := models.EventRegistration{
-		EventID: input.EventID,
-		UserID:  userID,
-		Name:    input.Name,
-		Email:   input.Email,
-		Phone:   input.Phone,
+		EventID:   input.EventID,
+		UserID:    userID,
+		Name:      input.Name,
+		Email:     input.Email,
+		Phone:     input.Phone,
+		PaymentID: input.PaymentID,
+		Cost:      event.Cost,
 	}
 
 	if err := h.DB.Create(&registration).Error; err != nil {

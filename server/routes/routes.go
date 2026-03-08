@@ -54,7 +54,7 @@ func Register(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
 		eventGroup.GET("/registrations/:eventId", eventH.GetEventRegistrations)
 
 		// Protected
-		eventGroup.POST("/create", auth, eventH.CreateEvent)
+		eventGroup.POST("/create", auth, admin, eventH.CreateEvent)
 		eventGroup.DELETE("/:id", auth, eventH.DeleteEvent)
 		eventGroup.PUT("/:id", auth, eventH.UpdateEvent)
 		eventGroup.POST("/register", auth, eventH.RegisterForEvent)

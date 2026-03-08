@@ -187,17 +187,30 @@ const Home = () => {
       <section className="py-16 bg-gradient-to-r from-blue-700 to-purple-700">
         <div className="max-w-3xl mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to create your own event?
+            {user?.role === "admin"
+              ? "Ready to create your own event?"
+              : "Ready to discover amazing events?"}
           </h2>
           <p className="text-lg text-blue-100 mb-8">
-            Join EventHub and start organizing events that inspire and connect
-            people.
+            {user?.role === "admin"
+              ? "Join EventHub and start organizing events that inspire and connect people."
+              : "Explore a wide range of events and connect with amazing communities."}
           </p>
           <Link
-            to={user ? "/create-event" : "/signup"}
+            to={
+              user
+                ? user.role === "admin"
+                  ? "/create-event"
+                  : "/events"
+                : "/signup"
+            }
             className="inline-block bg-white text-blue-700 font-bold px-8 py-4 rounded-lg shadow-lg text-lg hover:bg-blue-50 transition"
           >
-            {user ? "Create Event" : "Get Started"}
+            {user
+              ? user.role === "admin"
+                ? "Create Event"
+                : "Explore Events"
+              : "Get Started"}
           </Link>
         </div>
       </section>

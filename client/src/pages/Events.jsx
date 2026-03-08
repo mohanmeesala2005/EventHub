@@ -53,8 +53,8 @@ const Events = () => {
       });
       
       // Remove from state
-      setEvents(events.filter((e) => e._id !== eventId));
-      setFilteredEvents(filteredEvents.filter((e) => e._id !== eventId));
+      setEvents(events.filter((e) => e.ID !== eventId));
+      setFilteredEvents(filteredEvents.filter((e) => e.ID !== eventId));
       alert("Event deleted successfully!");
     } catch (err) {
       console.error("Failed to delete event:", err);
@@ -129,7 +129,7 @@ const Events = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {filteredEvents.map((event) => (
               <div
-                key={event._id}
+                key={event.ID}
                 className="border p-5 rounded-2xl shadow-xl bg-white flex flex-col transition-transform hover:scale-105 hover:shadow-2xl duration-300"
               >
                 {/* Image display */}
@@ -173,7 +173,7 @@ const Events = () => {
                   {event.createdByName !== user?.username && user ? (
                     <button
                       className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg font-semibold shadow hover:from-green-500 hover:to-blue-500 transition-colors duration-300"
-                      onClick={() => navigate(`/register/${event._id}`)}
+                      onClick={() => navigate(`/register/${event.ID}`)}
                     >
                       Register
                     </button>
@@ -186,7 +186,7 @@ const Events = () => {
                   {/* Admin Delete Button */}
                   {user?.role === "admin" && (
                     <button
-                      onClick={() => handleDeleteEvent(event._id, event.title)}
+                      onClick={() => handleDeleteEvent(event.ID, event.title)}
                       className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold shadow transition-colors duration-300"
                       title="Delete Event (Admin)"
                     >

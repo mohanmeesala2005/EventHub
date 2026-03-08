@@ -131,31 +131,17 @@ const Profile = () => {
             </p>
             <div className="space-y-2">
               <button
-                onClick={() => navigate("/myEvents")}
-                className="w-full bg-blue-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
+                onClick={() => setIsEditing(true)}
+                className="w-full bg-green-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
               >
-                View Your Events
+                Edit Your Profile
               </button>
               <button
-                onClick={() => navigate("/create-event")}
-                className="w-full text-white bg-purple-700 px-4 py-2 rounded-lg hover:bg-purple-800 transition"
+                onClick={handleLogout}
+                className="w-full text-white bg-red-700 px-4 py-2 rounded-lg hover:bg-purple-800 transition"
               >
-                Add Events
+                LogOut
               </button>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="flex-1 bg-green-500 text-white px-5 py-2 rounded-lg shadow hover:bg-green-600 transition"
-                >
-                  Edit Profile
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex-1 bg-red-500 text-white px-5 py-2 rounded-lg shadow hover:bg-red-600 transition"
-                >
-                  Logout
-                </button>
-              </div>
             </div>
           </>
         )}

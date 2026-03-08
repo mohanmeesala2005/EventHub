@@ -9,8 +9,9 @@ type EventRegistration struct {
 	UserID  uint    `gorm:"not null"             json:"userId"`
 	Name    string  `json:"name"`
 	Email   string  `json:"email"`
-	Phone   string  `json:"phone"`
-	Cost    float64 `json:"cost"`
+	Phone     string  `json:"phone"`
+	Cost      float64 `json:"cost"`
+	PaymentID string  `json:"paymentId"`
 
 	// Preloadable associations — omitted from JSON if empty.
 	Event Event `gorm:"foreignKey:EventID" json:"event,omitempty"`

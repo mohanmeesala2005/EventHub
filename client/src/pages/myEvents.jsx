@@ -31,6 +31,11 @@ const MyEvents = () => {
       navigate("/login");
       return;
     }
+    const parsedUser = JSON.parse(userData);
+    if (parsedUser.role !== "admin") {
+      navigate("/dashboard");
+      return;
+    }
     API.post("/events/getevent")
       .then((res) => {
         setEvents(res.data);
@@ -78,7 +83,7 @@ const MyEvents = () => {
   };
 
   const startEdit = (event) => {
-    setEditingEvent(event._id);
+    setEditingEvent(event.ID);
     setEditForm({
       title: event.title,
       description: event.description,
@@ -197,14 +202,14 @@ const MyEvents = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           {userEvents.map((event) => (
             <div
-              key={event._id}
+              key={event.ID}
               className="bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 flex flex-col overflow-hidden"
             >
-              {editingEvent === event._id ? (
+              {editingEvent === event.ID ? (
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
-                    handleEditSubmit(event._id);
+                    handleEditSubmit(event.ID);
                   }}
                   className="flex flex-col gap-3 p-4"
                   encType="multipart/form-data"
@@ -296,7 +301,7 @@ const MyEvents = () => {
                     </p>
                     <button
                       className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition mb-2"
-                      onClick={() => navigate(`/registrations/${event._id}`)}
+                      onClick={() => navigate(`/registrations/${event.ID}`)}
                     >
                       View Registrations
                     </button>
@@ -309,7 +314,7 @@ const MyEvents = () => {
                       </button>
                       <button
                         className="flex-1 bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 text-sm"
-                        onClick={() => handleDeleteEvent(event._id)}
+                        onClick={() => handleDeleteEvent(event.ID)}
                       >
                         Delete
                       </button>

@@ -74,12 +74,14 @@ const Navbar = () => {
           )}
           {user ? (
             <>
-              <Link
-                to="/create-event"
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                Create Event
-              </Link>
+          {user?.role === "admin" && (
+            <Link
+              to="/create-event"
+              className="px-4 py-2 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
+            >
+              Create Event
+            </Link>
+          )}
               <div className="relative">
                 <button
                   onClick={() => setProfileOpen(!profileOpen)}
@@ -125,13 +127,15 @@ const Navbar = () => {
                     >
                       Profile
                     </Link>
-                    <Link
-                      to="/myEvents"
-                      className="block px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-                      onClick={() => setProfileOpen(false)}
-                    >
-                      My Events
-                    </Link>
+                    {user.role === "admin" && (
+                      <Link
+                        to="/myEvents"
+                        className="block px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                        onClick={() => setProfileOpen(false)}
+                      >
+                        My Events
+                      </Link>
+                    )}
                     <div className="border-t border-slate-700">
                       <button
                         onClick={() => {
@@ -233,13 +237,15 @@ const Navbar = () => {
             )}
             {user ? (
               <>
-                <Link
-                  to="/create-event"
-                  className="block px-3 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium transition-all my-2"
-                  onClick={() => setMenuOpen(false)}
-                >
-                  Create Event
-                </Link>
+                {user.role === "admin" && (
+                  <Link
+                    to="/create-event"
+                    className="block px-3 py-3 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600 text-white font-medium transition-all my-2"
+                    onClick={() => setMenuOpen(false)}
+                  >
+                    Create Event
+                  </Link>
+                )}
                 <Link
                   to="/profile"
                   className="block px-3 py-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white font-medium transition-colors"

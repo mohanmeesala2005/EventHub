@@ -79,14 +79,14 @@ const Dashboard = () => {
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {regs.map((r) => (
               <div
-                key={r._id}
+                key={r.ID}
                 className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300"
               >
-                {r.eventId?.image && (
+                {r.event?.image && (
                   <div className="h-48 overflow-hidden bg-gray-200">
                     <img
-                      src={`http://localhost:5000/${r.eventId.image}`}
-                      alt={r.eventId.title}
+                      src={`http://localhost:5000/${r.event.image.replace(/\\/g, '/')}`}
+                      alt={r.event.title}
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.style.display = "none";
@@ -97,14 +97,14 @@ const Dashboard = () => {
 
                 <div className="p-6">
                   <h2 className="text-xl font-bold text-gray-800 mb-2">
-                    {r.eventId?.title || "Event Removed"}
+                    {r.event?.title || "Event Removed"}
                   </h2>
 
                   <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                    {r.eventId?.description || "This event has been removed."}
+                    {r.event?.description || "This event has been removed."}
                   </p>
 
-                  {r.eventId && (
+                  {r.event && (
                     <>
                       <div className="space-y-2 mb-4">
                         <div className="flex items-center text-sm text-gray-700">
@@ -121,10 +121,10 @@ const Dashboard = () => {
                               d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                             />
                           </svg>
-                          <span>{formatDate(r.eventId.date)}</span>
+                          <span>{formatDate(r.event.date)}</span>
                         </div>
 
-                        {r.eventId.cost !== undefined && (
+                        {r.event.cost !== undefined && (
                           <div className="flex items-center text-sm text-gray-700">
                             <svg
                               className="w-5 h-5 mr-2 text-green-500"
@@ -140,9 +140,9 @@ const Dashboard = () => {
                               />
                             </svg>
                             <span className="font-semibold">
-                              {r.eventId.cost === 0
+                              {r.event.cost === 0
                                 ? "Free"
-                                : `₹${r.eventId.cost}`}
+                                : `₹${r.event.cost}`}
                             </span>
                           </div>
                         )}
@@ -153,7 +153,7 @@ const Dashboard = () => {
                           Registered on
                         </p>
                         <p className="text-sm text-gray-700 font-medium">
-                          {new Date(r.createdAt).toLocaleDateString("en-US", {
+                          {new Date(r.CreatedAt).toLocaleDateString("en-US", {
                             year: "numeric",
                             month: "short",
                             day: "numeric",

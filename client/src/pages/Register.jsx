@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import Preloader from '../components/Preloader';
 
 const getStoredUser = () => {
   try {
@@ -36,7 +37,7 @@ const Register = () => {
   useEffect(() => {
     API.post('/events/getevent')
       .then(res => {
-        const found = res.data.find(ev => ev._id === eventId);
+        const found = res.data.find(ev => String(ev.ID) === String(eventId));
         setEvent(found);
       })
       .catch(() => setMessage('Failed to load event details'))
@@ -55,7 +56,7 @@ const Register = () => {
     e.preventDefault();
     try {
       await API.post('/events/register', {
-        eventId,
+        eventId: Number(eventId),
         ...form,
       });
       setMessage('Registered successfully!');
