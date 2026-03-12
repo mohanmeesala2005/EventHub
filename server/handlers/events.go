@@ -24,7 +24,10 @@ type EventHandler struct {
 func saveUploadedImage(c *gin.Context) (string, error) {
 	file, header, err := c.Request.FormFile("image")
 	if err != nil {
-		return "", nil // no image uploaded — not an error
+		if err == http.ErrMissingFile {
+			return "", nil // no image uploaded — not an error
+		}
+		return "", err
 	}
 	defer file.Close()
 
@@ -43,7 +46,8 @@ func saveUploadedImage(c *gin.Context) (string, error) {
 	if _, err := io.Copy(dst, file); err != nil {
 		return "", err
 	}
-	return dstPath, nil
+	// Ensure we use forward slashes for the path stored in the database.
+	return filepath.ToSlash(dstPath), nil
 }
 
 // getUserID extracts the authenticated user's ID from the Gin context (set by AuthMiddleware).

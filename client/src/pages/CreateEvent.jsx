@@ -65,8 +65,6 @@ function CreateEvent() {
       const response = await API.post('/events/create', data ,{
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type'
-          : 'multipart/form-data',
         }
       });
       if (response.status === 201) {
