@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import API from "../api/axios";
+import API, { API_BASE_URL } from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import Preloader from "../components/Preloader";
 
@@ -136,7 +136,7 @@ const Events = () => {
                 <div className="mb-4 h-44 w-full bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center overflow-hidden">
                   {event.image ? (
                     <img
-                      src={`http://localhost:5000/${event.image.replace(
+                      src={`${API_BASE_URL}/${event.image.replace(
                         /\\/g,
                         "/"
                       )}`}

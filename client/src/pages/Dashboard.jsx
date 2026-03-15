@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import API from "../api/axios";
+import API, { API_BASE_URL } from "../api/axios";
 import Preloader from "../components/Preloader";
 import { useNavigate } from "react-router-dom";
 
@@ -85,7 +85,7 @@ const Dashboard = () => {
                 {r.event?.image && (
                   <div className="h-48 overflow-hidden bg-gray-200">
                     <img
-                      src={`http://localhost:5000/${r.event.image.replace(/\\/g, '/')}`}
+                      src={`${API_BASE_URL}/${r.event.image.replace(/\\/g, '/')}`}
                       alt={r.event.title}
                       className="w-full h-full object-cover"
                       onError={(e) => {

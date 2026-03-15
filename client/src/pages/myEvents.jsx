@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../api/axios";
+import API, { API_BASE_URL } from "../api/axios";
 
 const MyEvents = () => {
   const [events, setEvents] = useState([]);
@@ -275,7 +275,7 @@ const MyEvents = () => {
                   <div className="h-44 w-full bg-gray-100 flex items-center justify-center overflow-hidden">
                     {event.image ? (
                       <img
-                        src={`http://localhost:5000/${event.image.replace(
+                        src={`${API_BASE_URL}/${event.image.replace(
                           /\\/g,
                           "/"
                         )}`}

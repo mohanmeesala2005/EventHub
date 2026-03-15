@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import API from "../api/axios";
+import API, { API_BASE_URL } from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import Preloader from "../components/Preloader";
 
@@ -272,7 +272,7 @@ const AdminDashboard = () => {
                         <div className="flex items-center gap-3">
                           {event.image && (
                             <img
-                              src={`http://localhost:5000/${event.image}`}
+                              src={`${API_BASE_URL}/${event.image}`}
                               alt={event.title}
                               className="w-12 h-12 rounded-lg object-cover"
                               onError={(e) => {
