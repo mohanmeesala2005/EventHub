@@ -89,7 +89,7 @@ function CreateEvent() {
 
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-white to-purple-200">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
       <div className="bg-white shadow-2xl rounded-2xl p-15 w-full max-w-lg">
         <h1 className="text-4xl font-extrabold text-purple-700 mb-6 text-center drop-shadow">
           Create Event

@@ -141,7 +141,7 @@ const MyEvents = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 py-10 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-10 px-4">
       {/* Header with Title and Search Bar */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4 max-w-7xl mx-auto">
         <h1 className="text-3xl font-extrabold text-blue-800">My Events</h1>

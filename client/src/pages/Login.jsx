@@ -32,7 +32,7 @@ const Login = () => {
   if (loading) return <Preloader />;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-800">
       <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
         <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center">Login</h2>
         <form onSubmit={handleSubmit} className="space-y-4">

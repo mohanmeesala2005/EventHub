@@ -71,7 +71,8 @@ const Profile = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-16 bg-gradient-to-br from-blue-100 to-purple-100 p-8 rounded-2xl shadow-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-10">
+      <div className="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-2xl">
       <div className="flex flex-col items-center">
         <div className="bg-blue-500 text-white rounded-full w-24 h-24 flex items-center justify-center text-4xl font-bold mb-4 shadow-lg border-4 border-white">
           {user.username ? user.username.charAt(0).toUpperCase() : "U"}
@@ -145,6 +146,7 @@ const Profile = () => {
             </div>
           </>
         )}
+      </div>
       </div>
     </div>
   );

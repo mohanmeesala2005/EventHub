@@ -24,14 +24,15 @@ const Registrations = () => {
   }, [eventId]);
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <button className="mb-4 text-blue-600 underline" onClick={() => navigate(-1)}>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 text-slate-100 py-8">
+      <div className="p-8 max-w-2xl mx-auto bg-slate-800 rounded-xl shadow-lg">
+      <button className="mb-4 text-blue-400 hover:text-blue-300 underline" onClick={() => navigate(-1)}>
         &larr; Back
       </button>
-      <h1 className="text-2xl font-bold mb-2">Registrations for {event?.title || 'Event'}</h1>
-      <p className="mb-4 text-gray-600">{event?.description}</p>
+      <h1 className="text-2xl font-bold mb-2 text-white">Registrations for {event?.title || 'Event'}</h1>
+      <p className="mb-4 text-slate-300">{event?.description}</p>
       {registrations.length === 0 ? (
-        <p className="text-gray-500">No registrations yet.</p>
+        <p className="text-slate-400">No registrations yet.</p>
       ) : (
         <table className="w-full border">
           <thead>
@@ -54,6 +55,7 @@ const Registrations = () => {
           </tbody>
         </table>
       )}
+      </div>
     </div>
   );
 };
