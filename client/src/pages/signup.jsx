@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import API from "../api/axios";
 import Preloader from "../components/Preloader";
+import FormInput from "../components/FormInput";
+import Button from "../components/Button";
+import Dialog from "../components/Dialog";
 import { useNavigate } from "react-router-dom";
 
 const SignUp = () => {
@@ -13,6 +16,30 @@ const SignUp = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [dialogConfig, setDialogConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    showCancel: false,
+    confirmText: 'Ok',
+    cancelText: 'Cancel',
+    onConfirm: null,
+    onCancel: null,
+  });
+
+  const closeDialog = () => {
+    setDialogConfig((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleDialogConfirm = () => {
+    dialogConfig.onConfirm?.();
+    closeDialog();
+  };
+
+  const handleDialogCancel = () => {
+    dialogConfig.onCancel?.();
+    closeDialog();
+  };
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -31,7 +58,13 @@ const SignUp = () => {
       localStorage.setItem("user", JSON.stringify(res.data.user));
       navigate("/");
     } catch (err) {
-      alert(err.response?.data?.message || "Registration failed");
+      setDialogConfig({
+        isOpen: true,
+        title: 'Registration Failed',
+        message: err.response?.data?.message || 'Registration failed',
+        showCancel: false,
+        confirmText: 'Ok',
+      });
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -48,43 +81,39 @@ const SignUp = () => {
           Sign Up
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+          <FormInput
             name="username"
             type="text"
             placeholder="Username"
             value={form.username}
             onChange={handleChange}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
-          <input
+          <FormInput
             name="name"
             type="text"
             placeholder="Name"
             value={form.name}
             onChange={handleChange}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
-          <input
+          <FormInput
             name="email"
             type="email"
             placeholder="Email"
             value={form.email}
             onChange={handleChange}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
             required
           />
-          <div className="relative">
-            <input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
-              required
-            />
+          <FormInput
+            name="password"
+            type={showPassword ? "text" : "password"}
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            required
+            className="pr-10"
+          >
             <button
               type="button"
               onClick={togglePasswordVisibility}
@@ -92,13 +121,10 @@ const SignUp = () => {
             >
               {showPassword ? "Hide" : "Show"}
             </button>
-          </div>
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 transition text-white font-bold py-3 rounded-lg shadow"
-          >
+          </FormInput>
+          <Button type="submit" variant="primary" fullWidth>
             Register
-          </button>
+          </Button>
         </form>
         <p className="mt-4 text-center text-gray-600">
           Already have an account?{" "}
@@ -107,6 +133,16 @@ const SignUp = () => {
           </a>
         </p>
       </div>
+      <Dialog
+        isOpen={dialogConfig.isOpen}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        confirmText={dialogConfig.confirmText}
+        cancelText={dialogConfig.cancelText}
+        showCancel={dialogConfig.showCancel}
+        onConfirm={handleDialogConfirm}
+        onCancel={handleDialogCancel}
+      />
     </div>
   );
 };

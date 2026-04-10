@@ -1,104 +1,26 @@
-import React, { useEffect, useState } from "react";
-import API, { API_BASE_URL } from "../api/axios";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import { API_BASE_URL } from "../api/axios";
 import Preloader from "../components/Preloader";
+import Dialog from "../components/Dialog";
+import useAdminDashboard from "../hooks/useAdminDashboard";
 
 const AdminDashboard = () => {
-  const [events, setEvents] = useState([]);
-  const [registrations, setRegistrations] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filteredEvents, setFilteredEvents] = useState([]);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-    // Check if user is admin
-    if (!token || user.role !== "admin") {
-      navigate("/login");
-      return;
-    }
-
-    // Fetch events with stats and all registrations
-    Promise.all([
-      API.get("/events/admin/events-with-stats", {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      API.get("/events/admin/all-registrations", {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-    ])
-      .then(([eventsRes, regsRes]) => {
-        setEvents(eventsRes.data);
-        setFilteredEvents(eventsRes.data);
-        setRegistrations(regsRes.data);
-      })
-      .catch((err) => {
-        console.error("Failed to fetch admin data:", err);
-        if (err.response?.status === 403) {
-          alert("Access denied. Admin privileges required.");
-          navigate("/");
-        }
-      })
-      .finally(() => setTimeout(() => setLoading(false), 500));
-  }, [navigate]);
-
-  // Filter events based on search
-  useEffect(() => {
-    if (searchQuery.trim() === "") {
-      setFilteredEvents(events);
-    } else {
-      const filtered = events.filter(
-        (event) =>
-          event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.createdByName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.createdByEmail?.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredEvents(filtered);
-    }
-  }, [searchQuery, events]);
-
-  const handleDeleteEvent = async (eventId, eventTitle) => {
-    if (!window.confirm(`Are you sure you want to delete "${eventTitle}"?`)) {
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-    try {
-      await API.delete(`/events/${eventId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      // Remove from state
-      setEvents(events.filter((e) => e._id !== eventId));
-      setFilteredEvents(filteredEvents.filter((e) => e._id !== eventId));
-      alert("Event deleted successfully!");
-    } catch (err) {
-      console.error("Failed to delete event:", err);
-      alert("Failed to delete event. Please try again.");
-    }
-  };
-
-  const formatDate = (dateString) => {
-    const options = {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    return new Date(dateString).toLocaleDateString("en-US", options);
-  };
+  const {
+    loading,
+    searchQuery,
+    setSearchQuery,
+    filteredEvents,
+    dialogConfig,
+    handleDialogConfirm,
+    handleDialogCancel,
+    handleDeleteEvent,
+    formatDate,
+    totalEvents,
+    totalRegistrations,
+    upcomingEvents,
+  } = useAdminDashboard();
 
   if (loading) return <Preloader />;
-
-  const totalEvents = events.length;
-  const totalRegistrations = registrations.length;
-  const upcomingEvents = events.filter(
-    (e) => new Date(e.date) > new Date()
-  ).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-8 px-4">
@@ -333,7 +255,17 @@ const AdminDashboard = () => {
             </table>
           </div>
         </div>
-      </div>
+        </div>
+      <Dialog
+        isOpen={dialogConfig.isOpen}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        confirmText={dialogConfig.confirmText}
+        cancelText={dialogConfig.cancelText}
+        showCancel={dialogConfig.showCancel}
+        onConfirm={handleDialogConfirm}
+        onCancel={handleDialogCancel}
+      />
     </div>
   );
 };

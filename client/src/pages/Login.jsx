@@ -2,12 +2,39 @@ import React, { useState } from 'react';
 import API from '../api/axios';
 import { useNavigate } from 'react-router-dom';
 import Preloader from '../components/Preloader';
+import FormInput from '../components/FormInput';
+import Button from '../components/Button';
+import Dialog from '../components/Dialog';
 
 const Login = () => {
   const [form, setForm] = useState({ username: '', email: '', password: '' });
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false); // New state for password visibility
+  const [dialogConfig, setDialogConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    showCancel: false,
+    confirmText: 'Ok',
+    cancelText: 'Cancel',
+    onConfirm: null,
+    onCancel: null,
+  });
+
+  const closeDialog = () => {
+    setDialogConfig((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleDialogConfirm = () => {
+    dialogConfig.onConfirm?.();
+    closeDialog();
+  };
+
+  const handleDialogCancel = () => {
+    dialogConfig.onCancel?.();
+    closeDialog();
+  };
 
   const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -25,7 +52,13 @@ const Login = () => {
       }, 1000);
     } catch (err) {
       setLoading(false);
-      alert(err.response?.data?.message || 'Login failed');
+      setDialogConfig({
+        isOpen: true,
+        title: 'Login Failed',
+        message: err.response?.data?.message || 'Login failed',
+        showCancel: false,
+        confirmText: 'Ok',
+      });
     }
   };
 
@@ -36,31 +69,28 @@ const Login = () => {
       <div className="bg-white rounded-xl shadow-xl p-8 w-full max-w-md">
         <h2 className="text-2xl font-extrabold mb-6 text-blue-700 text-center">Login</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <input
+          <FormInput
             name="username"
             type="text"
             placeholder="Username"
             value={form.username}
             onChange={handleChange}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
-          <input
+          <FormInput
             name="email"
             type="email"
             placeholder="Email"
             value={form.email}
             onChange={handleChange}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
-          <div className="relative"> {/* Wrapper for password input and toggle icon */}
-            <input
-              name="password"
-              type={showPassword ? 'text' : 'password'}
-              placeholder="Password"
-              value={form.password}
-              onChange={handleChange}
-              className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 pr-10" // Added pr-10 for icon space
-            />
+          <FormInput
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            placeholder="Password"
+            value={form.password}
+            onChange={handleChange}
+            className="pr-10"
+          >
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
@@ -69,16 +99,26 @@ const Login = () => {
             >
               {showPassword ? 'Hide' : 'Show'}
             </button>
-          </div>
-          <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 transition text-white font-bold py-3 rounded-lg shadow">
+          </FormInput>
+          <Button type="submit" variant="primary" fullWidth>
             Login
-          </button>
+          </Button>
         </form>
         <p className="mt-4 text-center text-gray-600">
           Don't have an account?{' '}
           <a href='/signup' className='text-blue-600 hover:underline'>Sign Up</a>
         </p>
       </div>
+      <Dialog
+        isOpen={dialogConfig.isOpen}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        confirmText={dialogConfig.confirmText}
+        cancelText={dialogConfig.cancelText}
+        showCancel={dialogConfig.showCancel}
+        onConfirm={handleDialogConfirm}
+        onCancel={handleDialogCancel}
+      />
     </div>
   );
 };

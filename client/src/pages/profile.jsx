@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import Button from "../components/Button";
+import Dialog from "../components/Dialog";
+import FormInput from "../components/FormInput";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -11,6 +14,30 @@ const Profile = () => {
     email: "",
     username: "",
   });
+  const [dialogConfig, setDialogConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    showCancel: false,
+    confirmText: 'Ok',
+    cancelText: 'Cancel',
+    onConfirm: null,
+    onCancel: null,
+  });
+
+  const closeDialog = () => {
+    setDialogConfig((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleDialogConfirm = () => {
+    dialogConfig.onConfirm?.();
+    closeDialog();
+  };
+
+  const handleDialogCancel = () => {
+    dialogConfig.onCancel?.();
+    closeDialog();
+  };
 
   useEffect(() => {
     try {
@@ -62,11 +89,23 @@ const Profile = () => {
         localStorage.setItem("user", JSON.stringify(updatedUser));
         setUser(updatedUser);
         setIsEditing(false);
-        alert("Profile updated successfully!");
+        setDialogConfig({
+          isOpen: true,
+          title: 'Profile Saved',
+          message: 'Profile updated successfully!',
+          showCancel: false,
+          confirmText: 'Ok',
+        });
       }
     } catch (error) {
       console.error("Error updating profile:", error);
-      alert(error.response?.data?.message || "Failed to update profile");
+      setDialogConfig({
+        isOpen: true,
+        title: 'Update Failed',
+        message: error.response?.data?.message || 'Failed to update profile',
+        showCancel: false,
+        confirmText: 'Ok',
+      });
     }
   };
 
@@ -80,43 +119,44 @@ const Profile = () => {
 
         {isEditing ? (
           <div className="w-full space-y-4">
-            <input
-              type="text"
+            <FormInput
               name="username"
+              type="text"
               value={formData.username}
               onChange={handleInputChange}
               placeholder="Username"
-              className="w-full px-3 py-2 border rounded-lg"
             />
-            <input
-              type="text"
+            <FormInput
               name="name"
+              type="text"
               value={formData.name}
               onChange={handleInputChange}
               placeholder="Name"
-              className="w-full px-3 py-2 border rounded-lg"
             />
-            <input
-              type="email"
+            <FormInput
               name="email"
+              type="email"
               value={formData.email}
               onChange={handleInputChange}
               placeholder="Email"
-              className="w-full px-3 py-2 border rounded-lg"
             />
             <div className="flex gap-2">
-              <button
+              <Button
+                variant="success"
+                size="md"
+                className="flex-1"
                 onClick={handleSaveProfile}
-                className="bg-green-500 text-white px-4 py-2 rounded-lg flex-1"
               >
                 Save
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="secondary"
+                size="md"
+                className="flex-1"
                 onClick={() => setIsEditing(false)}
-                className="bg-gray-500 text-white px-4 py-2 rounded-lg flex-1"
               >
                 Cancel
-              </button>
+              </Button>
             </div>
           </div>
         ) : (
@@ -131,22 +171,36 @@ const Profile = () => {
               <strong>Email:</strong> {user.email}
             </p>
             <div className="space-y-2">
-              <button
+              <Button
+                fullWidth
+                variant="success"
+                size="md"
                 onClick={() => setIsEditing(true)}
-                className="w-full bg-green-600 text-white px-5 py-2 rounded-lg shadow hover:bg-blue-700 transition"
               >
                 Edit Your Profile
-              </button>
-              <button
+              </Button>
+              <Button
+                fullWidth
+                variant="danger"
+                size="md"
                 onClick={handleLogout}
-                className="w-full text-white bg-red-700 px-4 py-2 rounded-lg hover:bg-purple-800 transition"
               >
                 LogOut
-              </button>
+              </Button>
             </div>
           </>
         )}
       </div>
+      <Dialog
+        isOpen={dialogConfig.isOpen}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        confirmText={dialogConfig.confirmText}
+        cancelText={dialogConfig.cancelText}
+        showCancel={dialogConfig.showCancel}
+        onConfirm={handleDialogConfirm}
+        onCancel={handleDialogCancel}
+      />
       </div>
     </div>
   );

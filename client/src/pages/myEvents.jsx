@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API, { API_BASE_URL } from "../api/axios";
+import Button from "../components/Button";
+import Dialog from "../components/Dialog";
 
 const MyEvents = () => {
   const [events, setEvents] = useState([]);
@@ -13,7 +15,74 @@ const MyEvents = () => {
     date: "",
     image: null,
   });
+  const [dialogConfig, setDialogConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    showCancel: false,
+    confirmText: 'Ok',
+    cancelText: 'Cancel',
+    onConfirm: null,
+    onCancel: null,
+  });
   const navigate = useNavigate();
+
+  const closeDialog = () => setDialogConfig((prev) => ({ ...prev, isOpen: false }));
+  const handleDialogConfirm = () => {
+    dialogConfig.onConfirm?.();
+    closeDialog();
+  };
+  const handleDialogCancel = () => {
+    dialogConfig.onCancel?.();
+    closeDialog();
+  };
+
+  const deleteEvent = async (eventid) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setDialogConfig({
+          isOpen: true,
+          title: 'Not Logged In',
+          message: 'You must be logged in to delete events.',
+          showCancel: false,
+          confirmText: 'Ok',
+        });
+        return;
+      }
+      await API.delete(`/events/${eventid}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setEvents((prev) => prev.filter((event) => event.ID !== eventid));
+      setDialogConfig({
+        isOpen: true,
+        title: 'Deleted',
+        message: 'Event deleted successfully.',
+        showCancel: false,
+        confirmText: 'Ok',
+      });
+    } catch (error) {
+      setDialogConfig({
+        isOpen: true,
+        title: 'Delete Failed',
+        message: error.response?.data?.message || 'Failed to delete event',
+        showCancel: false,
+        confirmText: 'Ok',
+      });
+    }
+  };
+
+  const handleDeleteEvent = (eventid) => {
+    setDialogConfig({
+      isOpen: true,
+      title: 'Confirm Delete',
+      message: 'Are you sure you want to delete this event?',
+      showCancel: true,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: () => deleteEvent(eventid),
+    });
+  };
 
   let user = null;
   try {
@@ -41,7 +110,15 @@ const MyEvents = () => {
         setEvents(res.data);
         setFilteredEvents(res.data); // Initialize filtered events
       })
-      .catch(() => alert("Failed to load events"));
+      .catch(() => {
+        setDialogConfig({
+          isOpen: true,
+          title: 'Load Failed',
+          message: 'Failed to load events.',
+          showCancel: false,
+          confirmText: 'Ok',
+        });
+      });
   }, [navigate]);
 
   // Filter events based on search query
@@ -60,26 +137,6 @@ const MyEvents = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-  };
-
-  const handleDeleteEvent = async (eventid) => {
-    const confirmDelete = window.confirm(
-      "Are you sure! you want to delete this event?"
-    );
-    if (!confirmDelete) return;
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("You must be logged in to delete events.");
-        return;
-      }
-      await API.delete(`/events/${eventid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setEvents(events.filter((event) => event._id !== eventid));
-    } catch (error) {
-      alert(error.response?.data?.message || "Failed to delete event");
-    }
   };
 
   const startEdit = (event) => {
@@ -106,7 +163,13 @@ const MyEvents = () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("You must be logged in to edit events.");
+        setDialogConfig({
+          isOpen: true,
+          title: 'Not Logged In',
+          message: 'You must be logged in to edit events.',
+          showCancel: false,
+          confirmText: 'Ok',
+        });
         return;
       }
       const data = new FormData();
@@ -128,10 +191,24 @@ const MyEvents = () => {
           setEvents(res.data);
           setFilteredEvents(res.data);
         })
-        .catch(() => alert("Failed to load events"));
+        .catch(() => {
+        setDialogConfig({
+          isOpen: true,
+          title: 'Load Failed',
+          message: 'Failed to load events.',
+          showCancel: false,
+          confirmText: 'Ok',
+        });
+      });
       setEditingEvent(null);
     } catch {
-      alert("Failed to update event");
+      setDialogConfig({
+        isOpen: true,
+        title: 'Update Failed',
+        message: 'Failed to update event',
+        showCancel: false,
+        confirmText: 'Ok',
+      });
     }
   };
 
@@ -255,19 +332,12 @@ const MyEvents = () => {
                     className="p-2 border rounded"
                   />
                   <div className="flex gap-2 mt-2">
-                    <button
-                      type="submit"
-                      className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-                    >
+                    <Button type="submit" variant="success" className="flex-1">
                       Save
-                    </button>
-                    <button
-                      type="button"
-                      className="bg-gray-400 text-white px-4 py-2 rounded"
-                      onClick={() => setEditingEvent(null)}
-                    >
+                    </Button>
+                    <Button type="button" variant="secondary" className="flex-1" onClick={() => setEditingEvent(null)}>
                       Cancel
-                    </button>
+                    </Button>
                   </div>
                 </form>
               ) : (
@@ -299,25 +369,32 @@ const MyEvents = () => {
                     <p className="text-sm text-gray-500 mb-4">
                       Cost: ₹{event.cost || 0}
                     </p>
-                    <button
-                      className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition mb-2"
+                    <Button
+                      variant="primary"
+                      size="md"
+                      fullWidth
                       onClick={() => navigate(`/registrations/${event.ID}`)}
+                      className="mb-2"
                     >
                       View Registrations
-                    </button>
+                    </Button>
                     <div className="flex gap-2">
-                      <button
-                        className="flex-1 bg-blue-100 text-blue-700 px-3 py-1 rounded hover:bg-blue-200 text-sm"
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        className="flex-1"
                         onClick={() => startEdit(event)}
                       >
                         Edit
-                      </button>
-                      <button
-                        className="flex-1 bg-red-100 text-red-700 px-3 py-1 rounded hover:bg-red-200 text-sm"
+                      </Button>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        className="flex-1"
                         onClick={() => handleDeleteEvent(event.ID)}
                       >
                         Delete
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 </>
@@ -326,6 +403,16 @@ const MyEvents = () => {
           ))}
         </div>
       )}
+      <Dialog
+        isOpen={dialogConfig.isOpen}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        confirmText={dialogConfig.confirmText}
+        cancelText={dialogConfig.cancelText}
+        showCancel={dialogConfig.showCancel}
+        onConfirm={handleDialogConfirm}
+        onCancel={handleDialogCancel}
+      />
     </div>
   );
 };

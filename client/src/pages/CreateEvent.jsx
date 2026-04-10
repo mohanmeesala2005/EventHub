@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import Button from '../components/Button';
+import Dialog from '../components/Dialog';
 
 function CreateEvent() {
   const [formData, setFormData] = useState({
@@ -13,6 +15,30 @@ function CreateEvent() {
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
+  const [dialogConfig, setDialogConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    showCancel: false,
+    confirmText: 'Ok',
+    cancelText: 'Cancel',
+    onConfirm: null,
+    onCancel: null,
+  });
+
+  const closeDialog = () => {
+    setDialogConfig((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  const handleDialogConfirm = () => {
+    dialogConfig.onConfirm?.();
+    closeDialog();
+  };
+
+  const handleDialogCancel = () => {
+    dialogConfig.onCancel?.();
+    closeDialog();
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -68,11 +94,19 @@ function CreateEvent() {
         }
       });
       if (response.status === 201) {
-        alert('Event created successfully!');
-        setFormData({ title: '', description: '', date: '', cost: '' });
-        setImage(null);
-        setMessage('');
-        navigate('/myEvents');
+        setDialogConfig({
+          isOpen: true,
+          title: 'Success',
+          message: 'Event created successfully!',
+          confirmText: 'Continue',
+          showCancel: false,
+          onConfirm: () => {
+            setFormData({ title: '', description: '', date: '', cost: '' });
+            setImage(null);
+            setMessage('');
+            navigate('/myEvents');
+          },
+        });
       } else {
         setMessage('Failed to create event.');
       }
@@ -172,14 +206,21 @@ function CreateEvent() {
               </div>
             )}
           </div>
-          <button
-            type="submit"
-            className="w-full bg-gradient-to-r from-purple-500 to-purple-700 text-white font-bold py-3 rounded-lg shadow-lg hover:from-purple-600 hover:to-purple-800 transition text-lg"
-          >
+          <Button type="submit" variant="purple" fullWidth size="lg">
             Create Event
-          </button>
+          </Button>
         </form>
       </div>
+      <Dialog
+        isOpen={dialogConfig.isOpen}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        confirmText={dialogConfig.confirmText}
+        cancelText={dialogConfig.cancelText}
+        showCancel={dialogConfig.showCancel}
+        onConfirm={handleDialogConfirm}
+        onCancel={handleDialogCancel}
+      />
     </div>
   );
 }

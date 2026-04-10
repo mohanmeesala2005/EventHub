@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
 import Preloader from '../components/Preloader';
+import FormInput from '../components/FormInput';
 
 const getStoredUser = () => {
   try {
@@ -78,44 +79,42 @@ const Register = () => {
         <h1 className="text-2xl font-extrabold mb-2 text-blue-700 text-center">Register for {event.title}</h1>
         <p className="mb-6 text-gray-600 text-center">{event.description}</p>
         <form className="space-y-4" onSubmit={handleSubmit}>
-          <input
+          <FormInput
             name="name"
             type="text"
             placeholder={storedUser.name || 'Your Name'}
             value={form.name}
             onChange={handleChange}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50"
             readOnly
+            className="bg-gray-50"
           />
-          <input
+          <FormInput
             name="email"
             type="email"
             placeholder={storedUser.email || 'Your Email'}
             value={form.email}
             onChange={handleChange}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-gray-50"
             readOnly
+            className="bg-gray-50"
           />
-          <input
+          <FormInput
             name="phone"
             type="text"
             placeholder="Your Phone"
             value={form.phone}
             onChange={handleChange}
-            className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
           />
           {event.cost > 0 ? (
             <div className="mb-4">
               <label className="block text-gray-700 mb-1 font-medium">
                 Registration Fee: <span className="text-blue-700 font-bold">₹{event.cost}</span>
               </label>
-              <input
+              <FormInput
                 name="paymentId"
                 type="text"
                 placeholder="Payment Transaction ID"
                 value={form.paymentId || ''}
                 onChange={handleChange}
-                className="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400"
                 required
               />
             </div>

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import API, { API_BASE_URL } from "../api/axios";
+import API from "../api/axios";
 import { useNavigate } from "react-router-dom";
 import Preloader from "../components/Preloader";
+import EventCard from "../components/EventCard";
+import Dialog from "../components/Dialog";
 
 const Events = () => {
   const [events, setEvents] = useState([]);
@@ -9,6 +11,67 @@ const Events = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [dialogConfig, setDialogConfig] = useState({
+    isOpen: false,
+    title: '',
+    message: '',
+    showCancel: false,
+    confirmText: 'Ok',
+    cancelText: 'Cancel',
+    onConfirm: null,
+    onCancel: null,
+  });
+
+  const closeDialog = () => setDialogConfig((prev) => ({ ...prev, isOpen: false }));
+
+  const handleDialogConfirm = () => {
+    dialogConfig.onConfirm?.();
+    closeDialog();
+  };
+
+  const handleDialogCancel = () => {
+    dialogConfig.onCancel?.();
+    closeDialog();
+  };
+
+  const deleteEvent = async (eventId) => {
+    const token = localStorage.getItem("token");
+    try {
+      await API.delete(`/events/${eventId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setEvents((prev) => prev.filter((e) => e.ID !== eventId));
+      setFilteredEvents((prev) => prev.filter((e) => e.ID !== eventId));
+      setDialogConfig({
+        isOpen: true,
+        title: 'Deleted',
+        message: 'Event deleted successfully!',
+        showCancel: false,
+        confirmText: 'Ok',
+      });
+    } catch (err) {
+      console.error("Failed to delete event:", err);
+      setDialogConfig({
+        isOpen: true,
+        title: 'Error',
+        message: 'Failed to delete event. Please try again.',
+        showCancel: false,
+        confirmText: 'Ok',
+      });
+    }
+  };
+
+  const handleDeleteEvent = (eventId, eventTitle) => {
+    setDialogConfig({
+      isOpen: true,
+      title: 'Confirm Delete',
+      message: `Are you sure you want to delete "${eventTitle}"?`,
+      showCancel: true,
+      confirmText: 'Delete',
+      cancelText: 'Cancel',
+      onConfirm: () => deleteEvent(eventId),
+    });
+  };
 
   useEffect(() => {
     API.post("/events/getevent")
@@ -19,7 +82,16 @@ const Events = () => {
           setLoading(false);
         }, 1000);
       })
-      .catch((err) => alert("Failed to load events"));
+      .catch((err) => {
+        console.error("Failed to load events:", err);
+        setDialogConfig({
+          isOpen: true,
+          title: 'Load Error',
+          message: 'Failed to load events. Please refresh the page.',
+          showCancel: false,
+          confirmText: 'Ok',
+        });
+      });
   }, [navigate]);
 
   // Filter events based on search query
@@ -39,27 +111,6 @@ const Events = () => {
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-  };
-
-  const handleDeleteEvent = async (eventId, eventTitle) => {
-    if (!window.confirm(`Are you sure you want to delete "${eventTitle}"?`)) {
-      return;
-    }
-
-    const token = localStorage.getItem("token");
-    try {
-      await API.delete(`/events/${eventId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      // Remove from state
-      setEvents(events.filter((e) => e.ID !== eventId));
-      setFilteredEvents(filteredEvents.filter((e) => e.ID !== eventId));
-      alert("Event deleted successfully!");
-    } catch (err) {
-      console.error("Failed to delete event:", err);
-      alert("Failed to delete event. Please try again.");
-    }
   };
 
   if (loading) return <Preloader />;
@@ -128,89 +179,27 @@ const Events = () => {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {filteredEvents.map((event) => (
-              <div
+              <EventCard
                 key={event.ID}
-                className="border p-5 rounded-2xl shadow-xl bg-white flex flex-col transition-transform hover:scale-105 hover:shadow-2xl duration-300"
-              >
-                {/* Image display */}
-                <div className="mb-4 h-44 w-full bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center overflow-hidden">
-                  {event.image ? (
-                    <img
-                      src={`${API_BASE_URL}/${event.image.replace(
-                        /\\/g,
-                        "/"
-                      )}`}
-                      alt="Event"
-                      className="object-cover h-full w-full"
-                    />
-                  ) : (
-                    <span className="text-gray-400">Event Image</span>
-                  )}
-                </div>
-                <h3 className="text-xl font-bold text-gray-700 mb-1 truncate">
-                  {event.title}
-                </h3>
-                <p className="text-sm text-gray-500 mb-2">
-                  By{" "}
-                  <span className="font-semibold">
-                    {event.createdByName || "Unknown"}
-                  </span>
-                </p>
-                <p className="text-gray-600 flex-1 mb-2 line-clamp-3">
-                  {event.description}
-                </p>
-                {event.cost > 0 ? (
-                  <p className="text-gray-600 flex-1 mb-2 line-clamp-3">
-                    Registration Fee: ₹{event.cost}
-                  </p>
-                ) : null}
-                <p className="text-xs text-gray-400 mb-3">
-                  {new Date(event.date).toLocaleString()}
-                </p>
-
-                {/* Action Buttons */}
-                <div className="flex gap-2">
-                  {event.createdByName !== user?.username && user ? (
-                    <button
-                      className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-lg font-semibold shadow hover:from-green-500 hover:to-blue-500 transition-colors duration-300"
-                      onClick={() => navigate(`/register/${event.ID}`)}
-                    >
-                      Register
-                    </button>
-                  ) : (
-                    <span className="text-xs text-green-600 font-semibold mt-2">
-                      {user ? "Your Event" : ""}
-                    </span>
-                  )}
-
-                  {/* Admin Delete Button */}
-                  {user?.role === "admin" && (
-                    <button
-                      onClick={() => handleDeleteEvent(event.ID, event.title)}
-                      className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-semibold shadow transition-colors duration-300"
-                      title="Delete Event (Admin)"
-                    >
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
+                event={event}
+                user={user}
+                navigate={navigate}
+                onDelete={handleDeleteEvent}
+              />
             ))}
           </div>
         )}
       </div>
+      <Dialog
+        isOpen={dialogConfig.isOpen}
+        title={dialogConfig.title}
+        message={dialogConfig.message}
+        confirmText={dialogConfig.confirmText}
+        cancelText={dialogConfig.cancelText}
+        showCancel={dialogConfig.showCancel}
+        onConfirm={handleDialogConfirm}
+        onCancel={handleDialogCancel}
+      />
     </div>
   );
 };
