@@ -7,14 +7,19 @@ import (
 	"github.com/yourusername/eventhub/config"
 	"github.com/yourusername/eventhub/handlers"
 	"github.com/yourusername/eventhub/middleware"
+	"github.com/yourusername/eventhub/services"
 	"gorm.io/gorm"
 )
 
 // Register wires all routes onto the given Gin engine.
 func Register(r *gin.Engine, db *gorm.DB, cfg *config.Config) {
+	// Instantiate service layers.
+	authService := services.NewAuthService(db, cfg.JWTSecret)
+	eventService := services.NewEventService(db)
+
 	// Instantiate handlers.
-	authH := &handlers.AuthHandler{DB: db, JWTSecret: cfg.JWTSecret}
-	eventH := &handlers.EventHandler{DB: db}
+	authH := &handlers.AuthHandler{AuthService: authService}
+	eventH := &handlers.EventHandler{EventService: eventService}
 	chatbotH := &handlers.ChatbotHandler{GeminiAPIKey: cfg.GeminiAPIKey}
 
 	// Middleware factories.

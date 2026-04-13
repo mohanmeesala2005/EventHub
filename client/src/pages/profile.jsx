@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../api/axios";
+import { clearAuthStorage, getCurrentUser, getTokenFromStorage, isAuthenticated, saveAuthInStorage } from "../utils/auth";
 import Button from "../components/Button";
 import Dialog from "../components/Dialog";
 import FormInput from "../components/FormInput";
@@ -40,17 +41,14 @@ const Profile = () => {
   };
 
   useEffect(() => {
-    try {
-      const userData = localStorage.getItem("user");
-      if (userData) {
-        const parsedUser = JSON.parse(userData);
-        setUser(parsedUser);
-        setFormData(parsedUser);
-      }
-    } catch (error) {
-      localStorage.removeItem("user");
+    const currentUser = getCurrentUser();
+    if (!currentUser || !isAuthenticated()) {
+      navigate("/login");
+      return;
     }
-  }, []);
+    setUser(currentUser);
+    setFormData(currentUser);
+  }, [navigate]);
 
   if (!user) {
     return (
@@ -66,8 +64,7 @@ const Profile = () => {
   }
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearAuthStorage();
     navigate("/");
   };
 
@@ -78,7 +75,6 @@ const Profile = () => {
 
   const handleSaveProfile = async () => {
     try {
-      const token = localStorage.getItem("token");
       const response = await API.post("/auth/update", {
         name: formData.name,
         username: formData.username,
@@ -86,7 +82,7 @@ const Profile = () => {
 
       if (response.status === 200) {
         const updatedUser = response.data.user;
-        localStorage.setItem("user", JSON.stringify(updatedUser));
+        saveAuthInStorage({ token: getTokenFromStorage(), user: updatedUser });
         setUser(updatedUser);
         setIsEditing(false);
         setDialogConfig({

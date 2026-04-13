@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
-import { getTokenFromStorage, getUserFromStorage } from '../utils/auth';
+import { getCurrentUser, isAuthenticated } from '../utils/auth';
+import useDebounce from '../hooks/useDebounce';
 
 const useAdminDashboard = () => {
   const [events, setEvents] = useState([]);
   const [registrations, setRegistrations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [dialogConfig, setDialogConfig] = useState({
     isOpen: false,
@@ -37,11 +39,8 @@ const useAdminDashboard = () => {
   }, [dialogConfig, closeDialog]);
 
   const deleteEvent = useCallback(async (eventId) => {
-    const token = getTokenFromStorage();
     try {
-      await API.delete(`/events/${eventId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await API.delete(`/events/${eventId}`);
 
       setEvents((prev) => prev.filter((e) => e._id !== eventId));
       setFilteredEvents((prev) => prev.filter((e) => e._id !== eventId));
@@ -80,21 +79,16 @@ const useAdminDashboard = () => {
   );
 
   useEffect(() => {
-    const token = getTokenFromStorage();
-    const user = getUserFromStorage();
+    const user = getCurrentUser();
 
-    if (!token || user?.role !== 'admin') {
+    if (!isAuthenticated() || user?.role !== 'admin') {
       navigate('/login');
       return;
     }
 
     Promise.all([
-      API.get('/events/admin/events-with-stats', {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      API.get('/events/admin/all-registrations', {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
+      API.get('/events/admin/events-with-stats'),
+      API.get('/events/admin/all-registrations'),
     ])
       .then(([eventsRes, regsRes]) => {
         setEvents(eventsRes.data);
@@ -118,18 +112,18 @@ const useAdminDashboard = () => {
   }, [navigate]);
 
   useEffect(() => {
-    if (searchQuery.trim() === '') {
+    if (debouncedSearchQuery.trim() === '') {
       setFilteredEvents(events);
     } else {
       const filtered = events.filter(
         (event) =>
-          event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.createdByName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.createdByEmail?.toLowerCase().includes(searchQuery.toLowerCase())
+          event.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          event.createdByName?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          event.createdByEmail?.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       );
       setFilteredEvents(filtered);
     }
-  }, [searchQuery, events]);
+  }, [debouncedSearchQuery, events]);
 
   const formatDate = (dateString) => {
     const options = {

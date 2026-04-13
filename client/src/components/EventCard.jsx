@@ -14,6 +14,7 @@ const EventCard = ({ event, user, navigate, onDelete }) => {
           <img
             src={imageUrl}
             alt="Event"
+            loading="lazy"
             className="object-cover h-full w-full"
           />
         ) : (
@@ -77,4 +78,4 @@ const EventCard = ({ event, user, navigate, onDelete }) => {
   );
 };
 
-export default EventCard;
+export default React.memo(EventCard);

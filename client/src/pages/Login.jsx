@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import API from '../api/axios';
 import { useNavigate } from 'react-router-dom';
+import { saveAuthInStorage } from '../utils/auth';
 import Preloader from '../components/Preloader';
 import FormInput from '../components/FormInput';
 import Button from '../components/Button';
@@ -44,8 +45,7 @@ const Login = () => {
     setLoading(true);
     try {
       const res = await API.post('/auth/login', form);
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
+      saveAuthInStorage({ token: res.data.token, user: res.data.user });
       setTimeout(() => {
         setLoading(false);
         navigate('/');

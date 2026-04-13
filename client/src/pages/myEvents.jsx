@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API, { API_BASE_URL } from "../api/axios";
+import API, { API_BASE_URL, fetchEvents, invalidateEventsCache } from "../api/axios";
+import { getCurrentUser, isAuthenticated } from "../utils/auth";
 import Button from "../components/Button";
 import Dialog from "../components/Dialog";
+import useDebounce from "../hooks/useDebounce";
 
 const MyEvents = () => {
   const [events, setEvents] = useState([]);
   const [editingEvent, setEditingEvent] = useState(null);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [editForm, setEditForm] = useState({
     title: "",
     description: "",
@@ -39,8 +42,7 @@ const MyEvents = () => {
 
   const deleteEvent = async (eventid) => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      if (!isAuthenticated()) {
         setDialogConfig({
           isOpen: true,
           title: 'Not Logged In',
@@ -50,9 +52,8 @@ const MyEvents = () => {
         });
         return;
       }
-      await API.delete(`/events/${eventid}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await API.delete(`/events/${eventid}`);
+      invalidateEventsCache();
       setEvents((prev) => prev.filter((event) => event.ID !== eventid));
       setDialogConfig({
         isOpen: true,
@@ -84,28 +85,19 @@ const MyEvents = () => {
     });
   };
 
-  let user = null;
-  try {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      user = JSON.parse(userData);
-    }
-  } catch (error) {
-    localStorage.removeItem("user");
-  }
+  const user = getCurrentUser();
 
   useEffect(() => {
-    const userData = localStorage.getItem("user");
-    if (!userData) {
+    const currentUser = getCurrentUser();
+    if (!currentUser || !isAuthenticated()) {
       navigate("/login");
       return;
     }
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.role !== "admin") {
+    if (currentUser.role !== "admin") {
       navigate("/dashboard");
       return;
     }
-    API.post("/events/getevent")
+    fetchEvents()
       .then((res) => {
         setEvents(res.data);
         setFilteredEvents(res.data); // Initialize filtered events
@@ -123,17 +115,17 @@ const MyEvents = () => {
 
   // Filter events based on search query
   useEffect(() => {
-    if (searchQuery.trim() === "") {
+    if (debouncedSearchQuery.trim() === "") {
       setFilteredEvents(events);
     } else {
       const filtered = events.filter(
         (event) =>
-          event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.description.toLowerCase().includes(searchQuery.toLowerCase())
+          event.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          event.description.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       );
       setFilteredEvents(filtered);
     }
-  }, [searchQuery, events]);
+  }, [debouncedSearchQuery, events]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -161,8 +153,7 @@ const MyEvents = () => {
 
   const handleEditSubmit = async (eventid) => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
+      if (!isAuthenticated()) {
         setDialogConfig({
           isOpen: true,
           title: 'Not Logged In',
@@ -183,10 +174,9 @@ const MyEvents = () => {
       await API.put(`/events/${eventid}`, data, {
         headers: {
           "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
         },
       });
-      API.post("/events/getevent")
+      fetchEvents()
         .then((res) => {
           setEvents(res.data);
           setFilteredEvents(res.data);
@@ -350,6 +340,7 @@ const MyEvents = () => {
                           "/"
                         )}`}
                         alt="Event"
+                        loading="lazy"
                         className="object-cover h-full w-full"
                       />
                     ) : (

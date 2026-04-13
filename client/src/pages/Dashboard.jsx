@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import API, { API_BASE_URL } from "../api/axios";
 import Preloader from "../components/Preloader";
 import { useNavigate } from "react-router-dom";
+import { isAuthenticated } from "../utils/auth";
 
 const Dashboard = () => {
   const [regs, setRegs] = useState([]);
@@ -9,14 +10,11 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    if (!isAuthenticated()) {
       navigate("/login");
       return;
     }
-    API.get("/events/registrations", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    API.get("/events/registrations")
       .then((res) => setRegs(res.data))
       .catch((err) => {
         console.error("Failed to fetch registrations:", err);

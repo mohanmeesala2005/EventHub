@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from "react";
-import API from "../api/axios";
+import API, { fetchEvents, invalidateEventsCache } from "../api/axios";
+import { getCurrentUser } from "../utils/auth";
 import { useNavigate } from "react-router-dom";
 import Preloader from "../components/Preloader";
 import EventCard from "../components/EventCard";
 import Dialog from "../components/Dialog";
+import useDebounce from "../hooks/useDebounce";
 
 const Events = () => {
   const [events, setEvents] = useState([]);
   const [filteredEvents, setFilteredEvents] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const [dialogConfig, setDialogConfig] = useState({
@@ -35,11 +38,9 @@ const Events = () => {
   };
 
   const deleteEvent = async (eventId) => {
-    const token = localStorage.getItem("token");
     try {
-      await API.delete(`/events/${eventId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await API.delete(`/events/${eventId}`);
+      invalidateEventsCache();
       setEvents((prev) => prev.filter((e) => e.ID !== eventId));
       setFilteredEvents((prev) => prev.filter((e) => e.ID !== eventId));
       setDialogConfig({
@@ -74,7 +75,7 @@ const Events = () => {
   };
 
   useEffect(() => {
-    API.post("/events/getevent")
+    fetchEvents()
       .then((res) => {
         setEvents(res.data);
         setFilteredEvents(res.data);
@@ -96,18 +97,18 @@ const Events = () => {
 
   // Filter events based on search query
   useEffect(() => {
-    if (searchQuery.trim() === "") {
+    if (debouncedSearchQuery.trim() === "") {
       setFilteredEvents(events);
     } else {
       const filtered = events.filter(
         (event) =>
-          event.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          event.createdByName?.toLowerCase().includes(searchQuery.toLowerCase())
+          event.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          event.description.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          event.createdByName?.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       );
       setFilteredEvents(filtered);
     }
-  }, [searchQuery, events]);
+  }, [debouncedSearchQuery, events]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -115,15 +116,7 @@ const Events = () => {
 
   if (loading) return <Preloader />;
 
-  let user = null;
-  try {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      user = JSON.parse(userData);
-    }
-  } catch (error) {
-    localStorage.removeItem("user");
-  }
+  const user = getCurrentUser();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 p-8">

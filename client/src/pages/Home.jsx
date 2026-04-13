@@ -1,16 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { getCurrentUser } from "../utils/auth";
 
 const Home = () => {
-  let user = null;
-  try {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      user = JSON.parse(userData);
-    }
-  } catch (error) {
-    localStorage.removeItem("user");
-  }
+  const user = getCurrentUser();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">

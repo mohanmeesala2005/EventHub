@@ -1,5 +1,15 @@
 export const getTokenFromStorage = () => localStorage.getItem("token") || null;
 
+export const saveAuthInStorage = ({ token, user }) => {
+  localStorage.setItem("token", token);
+  localStorage.setItem("user", JSON.stringify(user));
+};
+
+export const clearAuthStorage = () => {
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+};
+
 export const getUserFromStorage = () => {
   const raw = localStorage.getItem("user");
   if (!raw) return null;
@@ -10,6 +20,8 @@ export const getUserFromStorage = () => {
     return null;
   }
 };
+
+export const getCurrentUser = () => getUserFromStorage();
 
 export const isAuthenticated = () => Boolean(getTokenFromStorage());
 

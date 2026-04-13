@@ -13,8 +13,9 @@ type Event struct {
 	Description    string    `json:"description"`
 	Cost           float64   `json:"cost"`
 	Date           time.Time `json:"date"`
-	CreatedBy      string    `json:"createdBy"`
-	CreatedByName  string    `json:"createdByName"`
-	CreatedByEmail string    `json:"createdByEmail"`
+	CreatedByID    *uint     `json:"createdBy,omitempty"`
+	Creator        User      `gorm:"foreignKey:CreatedByID" json:"createdByUser,omitempty"`
+	CreatedByName  string    `gorm:"-" json:"createdByName,omitempty"`
+	CreatedByEmail string    `gorm:"-" json:"createdByEmail,omitempty"`
 	Image          string    `json:"image"` // relative path or URL
 }

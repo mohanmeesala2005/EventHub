@@ -1,19 +1,17 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 	"github.com/yourusername/eventhub/models"
-	"golang.org/x/crypto/bcrypt"
+	"github.com/yourusername/eventhub/services"
 	"gorm.io/gorm"
 )
 
 type AuthHandler struct {
-	DB        *gorm.DB
-	JWTSecret string
+	AuthService *services.AuthService
 }
 
 // registerInput defines the expected JSON body for registration.
@@ -40,16 +38,6 @@ type userResponse struct {
 	Role     string `json:"role"`
 }
 
-func (h *AuthHandler) signToken(user *models.User) (string, error) {
-	claims := jwt.MapClaims{
-		"id":   user.ID,
-		"role": user.Role,
-		"exp":  time.Now().Add(24 * time.Hour).Unix(),
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(h.JWTSecret))
-}
-
 func toUserResponse(u *models.User) userResponse {
 	return userResponse{
 		ID:       u.ID,
@@ -68,30 +56,36 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		return
 	}
 
-	// If email already exists, return a token to let the frontend redirect (mirrors old Node.js behaviour).
-	var existing models.User
-	if err := h.DB.Where("email = ?", input.Email).First(&existing).Error; err == nil {
-		token, err := h.signToken(&existing)
+	existing, err := h.AuthService.FindByEmail(input.Email)
+	if err == nil {
+		token, err := h.AuthService.GenerateToken(existing)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to generate token"})
 			return
 		}
 		c.JSON(http.StatusOK, gin.H{
 			"token":   token,
-			"user":    toUserResponse(&existing),
+			"user":    toUserResponse(existing),
 			"message": "User already exists, redirecting to home",
 		})
 		return
 	}
 
-	// Check username uniqueness.
-	var existingByUsername models.User
-	if err := h.DB.Where("username = ?", input.Username).First(&existingByUsername).Error; err == nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "Username already exists"})
+	if !errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to check existing user"})
 		return
 	}
 
-	hashed, err := bcrypt.GenerateFromPassword([]byte(input.Password), 10)
+	_, err = h.AuthService.FindByUsername(input.Username)
+	if err == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "Username already exists"})
+		return
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to check username"})
+		return
+	}
+
+	hashed, err := h.AuthService.HashPassword(input.Password)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to hash password"})
 		return
@@ -101,14 +95,14 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Username: input.Username,
 		Name:     input.Name,
 		Email:    input.Email,
-		Password: string(hashed),
+		Password: hashed,
 	}
-	if err := h.DB.Create(&user).Error; err != nil {
+	if err := h.AuthService.CreateUser(&user); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to create user"})
 		return
 	}
 
-	token, err := h.signToken(&user)
+	token, err := h.AuthService.GenerateToken(&user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to generate token"})
 		return
@@ -129,24 +123,27 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	var user models.User
-	if err := h.DB.Where("email = ?", input.Email).First(&user).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+	user, err := h.AuthService.FindByEmail(input.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"message": "User not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to load user"})
 		return
 	}
 
-	// Optional username check — mirrors Node.js behaviour.
 	if input.Username != "" && user.Username != input.Username {
 		c.JSON(http.StatusBadRequest, gin.H{"message": "Username does not match the email"})
 		return
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password)); err != nil {
+	if err := h.AuthService.ComparePassword(user.Password, input.Password); err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "Invalid credentials"})
 		return
 	}
 
-	token, err := h.signToken(&user)
+	token, err := h.AuthService.GenerateToken(user)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Login failed"})
 		return
@@ -154,7 +151,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"token": token,
-		"user":  toUserResponse(&user),
+		"user":  toUserResponse(user),
 	})
 }
 
@@ -170,29 +167,20 @@ func (h *AuthHandler) UpdateProfile(c *gin.Context) {
 	}
 
 	rawID, _ := c.Get("userID")
-	// JWT MapClaims stores numbers as float64.
 	userID := uint(rawID.(float64))
 
-	var user models.User
-	if err := h.DB.First(&user, userID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "User Not Found"})
-		return
-	}
-
-	if input.Name != "" {
-		user.Name = input.Name
-	}
-	if input.Username != "" {
-		user.Username = input.Username
-	}
-
-	if err := h.DB.Save(&user).Error; err != nil {
+	user, err := h.AuthService.UpdateProfile(userID, input.Name, input.Username)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"message": "User Not Found"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Profile Updated!",
-		"user":    toUserResponse(&user),
+		"user":    toUserResponse(user),
 	})
 }

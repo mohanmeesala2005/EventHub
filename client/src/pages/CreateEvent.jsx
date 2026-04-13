@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import { getCurrentUser, isAuthenticated } from '../utils/auth';
 import Button from '../components/Button';
 import Dialog from '../components/Dialog';
 
@@ -41,11 +42,11 @@ function CreateEvent() {
   };
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
+    const currentUser = getCurrentUser();
+    if (!currentUser || !isAuthenticated()) {
       navigate('/login');
     } else {
-      setUser(JSON.parse(userData));
+      setUser(currentUser);
     }
   }, [navigate]);
   
@@ -64,35 +65,21 @@ function CreateEvent() {
     e.preventDefault();
     setMessage('Creating event...');
 
-    const token = localStorage.getItem('token');
-
     const data = new FormData();
     data.append('title', formData.title);
     data.append('description', formData.description);
     data.append('date', formData.date);
     data.append('cost', formData.cost || 0);
-    data.append('createdBy', user.id || user._id);
-    data.append('createdByName', user.username);
-    data.append('createdByEmail', user.email);
     if (image) {
       data.append('image', image);
     }
 
     try {
-      
-      if (!token) {
-        setMessage('Invalid token. Please login again.');
-        return;
-      }
-      if(formData.date < new Date().toISOString().split('T')[0]){
+      if (formData.date < new Date().toISOString().split('T')[0]){
         setMessage('Event date cannot be in the past.');
         return;
       }
-      const response = await API.post('/events/create', data ,{
-        headers: {
-          Authorization: `Bearer ${token}`,
-        }
-      });
+      const response = await API.post('/events/create', data);
       if (response.status === 201) {
         setDialogConfig({
           isOpen: true,

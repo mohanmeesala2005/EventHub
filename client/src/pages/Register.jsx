@@ -1,24 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import API from '../api/axios';
+import { getCurrentUser } from '../utils/auth';
 import Preloader from '../components/Preloader';
 import FormInput from '../components/FormInput';
 
 const getStoredUser = () => {
-  try {
-    const raw = localStorage.getItem('user');
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      return {
-        name: parsed?.name || localStorage.getItem('name') || '',
-        email: parsed?.email || localStorage.getItem('email') || '',
-      };
-    }
-  } catch {}
-  return {
-    name: localStorage.getItem('name') || '',
-    email: localStorage.getItem('email') || '',
-  };
+  const currentUser = getCurrentUser();
+  if (currentUser) {
+    return {
+      name: currentUser.name || '',
+      email: currentUser.email || '',
+    };
+  }
+  return { name: '', email: '' };
 };
 
 const Register = () => {

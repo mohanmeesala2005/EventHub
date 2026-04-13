@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import API from "../api/axios";
+import { saveAuthInStorage } from "../utils/auth";
 import Preloader from "../components/Preloader";
 import FormInput from "../components/FormInput";
 import Button from "../components/Button";
@@ -54,8 +55,7 @@ const SignUp = () => {
     setLoading(true);
     try {
       const res = await API.post("/auth/signup", form);
-      localStorage.setItem("token", res.data.token);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
+      saveAuthInStorage({ token: res.data.token, user: res.data.user });
       navigate("/");
     } catch (err) {
       setDialogConfig({

@@ -1,5 +1,6 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { clearAuthStorage, getCurrentUser } from "../utils/auth";
 import NavDesktop from "./NavDesktop";
 import NavMobile from "./NavMobile";
 
@@ -8,19 +9,10 @@ const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  let user = null;
-  try {
-    const userData = localStorage.getItem("user");
-    if (userData) {
-      user = JSON.parse(userData);
-    }
-  } catch (error) {
-    localStorage.removeItem("user");
-  }
+  const user = getCurrentUser();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
+    clearAuthStorage();
     navigate("/");
     window.location.reload();
   };

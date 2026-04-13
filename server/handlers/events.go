@@ -3,6 +3,7 @@ package handlers
 import (
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -11,24 +12,21 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/yourusername/eventhub/models"
-	"gorm.io/gorm"
+	"github.com/yourusername/eventhub/services"
 )
 
 type EventHandler struct {
-	DB *gorm.DB
+	EventService *services.EventService
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 // saveUploadedImage saves a multipart file to ./uploads/ and returns its relative path.
-func saveUploadedImage(c *gin.Context) (string, error) {
-	file, header, err := c.Request.FormFile("image")
-	if err != nil {
-		if err == http.ErrMissingFile {
-			return "", nil // no image uploaded — not an error
-		}
-		return "", err
+func saveUploadedImage(file multipart.File, header *multipart.FileHeader) (string, error) {
+	if file == nil || header == nil {
+		return "", nil
 	}
+
 	defer file.Close()
 
 	if err := os.MkdirAll("uploads", os.ModePerm); err != nil {
@@ -46,7 +44,6 @@ func saveUploadedImage(c *gin.Context) (string, error) {
 	if _, err := io.Copy(dst, file); err != nil {
 		return "", err
 	}
-	// Ensure we use forward slashes for the path stored in the database.
 	return filepath.ToSlash(dstPath), nil
 }
 
@@ -60,7 +57,13 @@ func getUserID(c *gin.Context) uint {
 
 // CreateEvent handles POST /api/events/create (protected, multipart/form-data)
 func (h *EventHandler) CreateEvent(c *gin.Context) {
-	imagePath, err := saveUploadedImage(c)
+	file, header, err := c.Request.FormFile("image")
+	if err != nil && err != http.ErrMissingFile {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to read image upload"})
+		return
+	}
+
+	imagePath, err := saveUploadedImage(file, header)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to save image"})
 		return
@@ -71,7 +74,6 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 	if dateStr != "" {
 		date, err = time.Parse(time.RFC3339, dateStr)
 		if err != nil {
-			// Try common date format as fallback.
 			date, err = time.Parse("2006-01-02", dateStr)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"message": "Invalid date format"})
@@ -83,18 +85,17 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 	costStr := c.PostForm("cost")
 	cost, _ := strconv.ParseFloat(costStr, 64)
 
+	userID := getUserID(c)
 	event := models.Event{
-		Title:          c.PostForm("title"),
-		Description:    c.PostForm("description"),
-		Date:           date,
-		Cost:           cost,
-		CreatedBy:      c.PostForm("createdBy"),
-		CreatedByName:  c.PostForm("createdByName"),
-		CreatedByEmail: c.PostForm("createdByEmail"),
-		Image:          imagePath,
+		Title:       c.PostForm("title"),
+		Description: c.PostForm("description"),
+		Date:        date,
+		Cost:        cost,
+		CreatedByID: &userID,
+		Image:       imagePath,
 	}
 
-	if err := h.DB.Create(&event).Error; err != nil {
+	if err := h.EventService.CreateEvent(&event); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": err.Error()})
 		return
 	}
@@ -103,8 +104,8 @@ func (h *EventHandler) CreateEvent(c *gin.Context) {
 
 // GetAllEvents handles POST /api/events/getevent (public)
 func (h *EventHandler) GetAllEvents(c *gin.Context) {
-	var events []models.Event
-	if err := h.DB.Order("date asc").Find(&events).Error; err != nil {
+	events, err := h.EventService.GetAllEvents()
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch events", "error": err.Error()})
 		return
 	}
@@ -115,13 +116,12 @@ func (h *EventHandler) GetAllEvents(c *gin.Context) {
 func (h *EventHandler) DeleteEvent(c *gin.Context) {
 	id := c.Param("id")
 
-	var event models.Event
-	if err := h.DB.First(&event, id).Error; err != nil {
+	event, err := h.EventService.GetEventByID(id)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Event not found"})
 		return
 	}
 
-	// Delete associated image file in a goroutine (non-blocking).
 	if event.Image != "" {
 		go func(imgPath string) {
 			if err := os.Remove(imgPath); err != nil {
@@ -130,31 +130,36 @@ func (h *EventHandler) DeleteEvent(c *gin.Context) {
 		}(event.Image)
 	}
 
-	if err := h.DB.Delete(&event).Error; err != nil {
+	if err := h.EventService.DeleteEvent(event); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Event deleted successfully"})
 }
 
-// UpdateEvent handles PUT /api/events/:id (protected, mult	ipart/form-data)
+// UpdateEvent handles PUT /api/events/:id (protected, multipart/form-data)
 func (h *EventHandler) UpdateEvent(c *gin.Context) {
 	id := c.Param("id")
 
-	var event models.Event
-	if err := h.DB.First(&event, id).Error; err != nil {
+	event, err := h.EventService.GetEventByID(id)
+	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"message": "Event not found"})
 		return
 	}
 
-	// Replace image if a new one was uploaded.
-	newImagePath, err := saveUploadedImage(c)
+	file, header, err := c.Request.FormFile("image")
+	if err != nil && err != http.ErrMissingFile {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to read image upload"})
+		return
+	}
+
+	newImagePath, err := saveUploadedImage(file, header)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to save image"})
 		return
 	}
+
 	if newImagePath != "" {
-		// Delete old image non-blocking.
 		if event.Image != "" {
 			go func(old string) { os.Remove(old) }(event.Image)
 		}
@@ -183,7 +188,7 @@ func (h *EventHandler) UpdateEvent(c *gin.Context) {
 		event.Cost = cost
 	}
 
-	if err := h.DB.Save(&event).Error; err != nil {
+	if err := h.EventService.UpdateEvent(event); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Something went wrong"})
 		return
 	}
@@ -206,13 +211,6 @@ func (h *EventHandler) RegisterForEvent(c *gin.Context) {
 		return
 	}
 
-	// Fetch event details to get the cost.
-	var event models.Event
-	if err := h.DB.First(&event, input.EventID).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "Event not found"})
-		return
-	}
-
 	userID := getUserID(c)
 	registration := models.EventRegistration{
 		EventID:   input.EventID,
@@ -221,10 +219,9 @@ func (h *EventHandler) RegisterForEvent(c *gin.Context) {
 		Email:     input.Email,
 		Phone:     input.Phone,
 		PaymentID: input.PaymentID,
-		Cost:      event.Cost,
 	}
 
-	if err := h.DB.Create(&registration).Error; err != nil {
+	if err := h.EventService.RegisterForEvent(&registration); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Registration Failed", "error": err.Error()})
 		return
 	}
@@ -235,8 +232,8 @@ func (h *EventHandler) RegisterForEvent(c *gin.Context) {
 func (h *EventHandler) GetEventRegistrations(c *gin.Context) {
 	eventID := c.Param("eventId")
 
-	var registrations []models.EventRegistration
-	if err := h.DB.Where("event_id = ?", eventID).Find(&registrations).Error; err != nil {
+	registrations, err := h.EventService.GetEventRegistrations(eventID)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch registrations"})
 		return
 	}
@@ -247,11 +244,8 @@ func (h *EventHandler) GetEventRegistrations(c *gin.Context) {
 func (h *EventHandler) GetUserRegistrations(c *gin.Context) {
 	userID := getUserID(c)
 
-	var registrations []models.EventRegistration
-	if err := h.DB.Preload("Event").
-		Where("user_id = ?", userID).
-		Order("created_at desc").
-		Find(&registrations).Error; err != nil {
+	registrations, err := h.EventService.GetUserRegistrations(userID)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch user registrations", "error": err.Error()})
 		return
 	}
@@ -268,27 +262,18 @@ type eventWithStats struct {
 
 // GetAllEventsWithStats handles GET /api/events/admin/events-with-stats (admin)
 func (h *EventHandler) GetAllEventsWithStats(c *gin.Context) {
-	var events []models.Event
-	if err := h.DB.Order("date asc").Find(&events).Error; err != nil {
+	result, err := h.EventService.GetAllEventsWithStats()
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch events with stats", "error": err.Error()})
 		return
-	}
-
-	result := make([]eventWithStats, 0, len(events))
-	for _, ev := range events {
-		var count int64
-		h.DB.Model(&models.EventRegistration{}).Where("event_id = ?", ev.ID).Count(&count)
-		result = append(result, eventWithStats{Event: ev, RegistrationCount: count})
 	}
 	c.JSON(http.StatusOK, result)
 }
 
 // GetAllRegistrations handles GET /api/events/admin/all-registrations (admin)
 func (h *EventHandler) GetAllRegistrations(c *gin.Context) {
-	var registrations []models.EventRegistration
-	if err := h.DB.Preload("Event").Preload("User").
-		Order("created_at desc").
-		Find(&registrations).Error; err != nil {
+	registrations, err := h.EventService.GetAllRegistrations()
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch all registrations", "error": err.Error()})
 		return
 	}
