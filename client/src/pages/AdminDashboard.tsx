@@ -1,7 +1,12 @@
+import { Link, useNavigate } from 'react-router-dom';
 import { API_BASE_URL } from '../api/axios';
 import Preloader from '../components/Preloader';
 import Dialog from '../components/Dialog';
 import useAdminDashboard from '../hooks/useAdminDashboard';
+import { getCurrentUser } from '../utils/auth';
+
+const getEventId = (event: any) => event?._id || event?.ID;
+const apiBaseUrl = API_BASE_URL;
 
 const AdminDashboard = () => {
   const {
@@ -18,162 +23,149 @@ const AdminDashboard = () => {
     totalRegistrations,
     upcomingEvents,
   } = useAdminDashboard();
+  const user = getCurrentUser();
+  const navigate = useNavigate();
 
   if (loading) return <Preloader />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-lg">
-              <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    <div className="min-h-screen bg-slate-900 py-10 px-4 text-white">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-blue-300">Admin Dashboard</p>
+            <h1 className="mt-2 text-4xl font-bold">Welcome back, {user?.name || user?.username || 'admin'}</h1>
+            <p className="mt-2 max-w-2xl text-slate-300">
+              Manage the events you created, review signups, and keep your schedule moving.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link to="/events" className="rounded-lg bg-white px-4 py-2 font-semibold text-slate-900 transition hover:bg-slate-100">
+              Browse Events
+            </Link>
+            <Link to="/create-event" className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white transition hover:bg-blue-500">
+              Create Event
+            </Link>
+          </div>
+        </div>
+
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-slate-700 bg-slate-800 p-5 shadow-xl">
+            <p className="text-sm text-slate-400">Created Events</p>
+            <p className="mt-3 text-4xl font-bold">{totalEvents}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-700 bg-slate-800 p-5 shadow-xl">
+            <p className="text-sm text-slate-400">Upcoming Events</p>
+            <p className="mt-3 text-4xl font-bold">{upcomingEvents}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-700 bg-slate-800 p-5 shadow-xl">
+            <p className="text-sm text-slate-400">Registrations</p>
+            <p className="mt-3 text-4xl font-bold">{totalRegistrations}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-700 bg-slate-800 p-5 shadow-xl">
+            <p className="text-sm text-slate-400">Visible Events</p>
+            <p className="mt-3 text-4xl font-bold">{filteredEvents.length}</p>
+          </div>
+        </div>
+
+        <section className="rounded-2xl border border-slate-700 bg-slate-800 p-6 shadow-xl">
+          <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Created Events</h2>
+              <p className="text-sm text-slate-400">Only the events created by your admin account are shown here.</p>
+            </div>
+            <div className="relative w-full lg:max-w-sm">
+              <input
+                type="text"
+                placeholder="Search your events..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-3 pl-10 text-white placeholder-slate-500 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30"
+              />
+              <svg className="absolute left-3 top-3.5 h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
             </div>
-            <div>
-              <h1 className="text-4xl font-bold text-white">Admin Dashboard</h1>
-              <p className="text-purple-200">Manage and monitor all events</p>
+          </div>
+
+          {filteredEvents.length === 0 ? (
+            <div className="rounded-xl border border-slate-700 bg-slate-950 p-8 text-slate-300">
+              <h3 className="text-2xl font-bold text-white">{searchQuery ? 'No matching events' : 'No created events yet'}</h3>
+              <p className="mt-2">
+                {searchQuery ? 'Try another search term.' : 'Create an event to start tracking registrations here.'}
+              </p>
+              {!searchQuery && (
+                <Link to="/create-event" className="mt-5 inline-flex rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-500">
+                  Create Event
+                </Link>
+              )}
             </div>
-          </div>
-        </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredEvents.map((event) => {
+                const eventId = getEventId(event);
+                const imageUrl = event.image ? `${apiBaseUrl}/${String(event.image).replace(/\\/g, '/')}` : '';
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 shadow-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm font-medium">Total Events</p>
-                <p className="text-4xl font-bold text-white mt-2">{totalEvents}</p>
-              </div>
-              <div className="bg-blue-400 bg-opacity-30 p-4 rounded-lg">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 shadow-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm font-medium">Total Registrations</p>
-                <p className="text-4xl font-bold text-white mt-2">{totalRegistrations}</p>
-              </div>
-              <div className="bg-green-400 bg-opacity-30 p-4 rounded-lg">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 shadow-xl">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100 text-sm font-medium">Upcoming Events</p>
-                <p className="text-4xl font-bold text-white mt-2">{upcomingEvents}</p>
-              </div>
-              <div className="bg-purple-400 bg-opacity-30 p-4 rounded-lg">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mb-6">
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="Search events by title, creator..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full px-4 py-3 pl-12 rounded-xl bg-white bg-opacity-10 backdrop-blur-md border border-purple-300 border-opacity-30 text-black placeholder-purple-200 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-            />
-            <svg className="absolute left-4 top-3.5 w-5 h-5 text-purple-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-          </div>
-        </div>
-
-        <div className="bg-white bg-opacity-10 backdrop-blur-md rounded-xl shadow-2xl overflow-hidden border border-purple-300 border-opacity-30">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-purple-900 bg-opacity-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-purple-100 uppercase tracking-wider">Event</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-purple-100 uppercase tracking-wider">Creator</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-purple-100 uppercase tracking-wider">Date</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-purple-100 uppercase tracking-wider">Cost</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-purple-100 uppercase tracking-wider">Registrations</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-purple-100 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-purple-300 divide-opacity-20">
-                {filteredEvents.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-white">
-                      {searchQuery ? 'No events match your search.' : 'No events found.'}
-                    </td>
-                  </tr>
-                ) : (
-                  filteredEvents.map((event) => (
-                    <tr key={event._id} className="hover:bg-purple-300 hover:bg-opacity-10 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          {event.image && (
+                return (
+                  <article key={eventId} className="rounded-xl border border-slate-700 bg-slate-950 p-5">
+                    <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-center">
+                        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-800 text-xs font-medium text-slate-500">
+                          {imageUrl ? (
                             <img
-                              src={`${API_BASE_URL}/${event.image}`}
+                              src={imageUrl}
                               alt={event.title}
-                              className="w-12 h-12 rounded-lg object-cover"
+                              className="h-full w-full object-cover"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).style.display = 'none';
                               }}
                             />
+                          ) : (
+                            'Event'
                           )}
-                          <div>
-                            <p className="text-black font-semibold">{event.title}</p>
-                            <p className="text-black-200 text-sm line-clamp-1">{event.description}</p>
+                        </div>
+                        <div className="min-w-0">
+                          <h3 className="text-xl font-bold">{event.title}</h3>
+                          <p className="mt-1 line-clamp-2 text-sm text-slate-400">{event.description || 'No description added.'}</p>
+                          <div className="mt-3 flex flex-wrap gap-2 text-sm">
+                            <span className="rounded-full bg-blue-500/15 px-3 py-1 font-semibold text-blue-200">
+                              {event.date ? formatDate(event.date) : 'Date TBA'}
+                            </span>
+                            <span className="rounded-full bg-green-500/15 px-3 py-1 font-semibold text-green-200">
+                              {Number(event.cost) > 0 ? `Rs ${event.cost}` : 'Free'}
+                            </span>
+                            <span className="rounded-full bg-slate-700 px-3 py-1 font-semibold text-slate-200">
+                              {event.registrationCount || 0} registered
+                            </span>
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-black text-sm">{event.createdByName}</p>
-                        <p className="text-black-200 text-xs">{event.createdByEmail}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-black text-sm">{formatDate(event.date)}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-500 bg-opacity-20 text-green-200">
-                          {event.cost === 0 ? 'Free' : `₹${event.cost}`}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-500 bg-opacity-20 text-blue-200">
-                          {event.registrationCount || 0} registered
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
+                      </div>
+
+                      <div className="flex shrink-0 flex-wrap gap-2">
                         <button
-                          onClick={() => handleDeleteEvent(event._id, event.title)}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors shadow-lg"
+                          type="button"
+                          onClick={() => navigate(`/registrations/${eventId}`)}
+                          className="rounded-lg bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
                         >
-                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                          </svg>
+                          Registrations
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteEvent(eventId, event.title)}
+                          className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-500"
+                        >
                           Delete
                         </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          )}
+        </section>
       </div>
+
       <Dialog
         isOpen={dialogConfig.isOpen}
         title={dialogConfig.title}

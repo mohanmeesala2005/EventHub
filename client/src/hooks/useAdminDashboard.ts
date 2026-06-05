@@ -4,6 +4,8 @@ import API from '../api/axios';
 import { getCurrentUser, isAuthenticated } from '../utils/auth';
 import useDebounce from './useDebounce';
 
+const getEventId = (event: any) => event?._id || event?.ID;
+
 const useAdminDashboard = () => {
   const [events, setEvents] = useState<any[]>([]);
   const [registrations, setRegistrations] = useState<any[]>([]);
@@ -38,12 +40,12 @@ const useAdminDashboard = () => {
     closeDialog();
   }, [dialogConfig, closeDialog]);
 
-  const deleteEvent = useCallback(async (eventId: string) => {
+  const deleteEvent = useCallback(async (eventId: string | number) => {
     try {
       await API.delete(`/events/${eventId}`);
 
-      setEvents((prev) => prev.filter((e) => e._id !== eventId));
-      setFilteredEvents((prev) => prev.filter((e) => e._id !== eventId));
+      setEvents((prev) => prev.filter((e) => getEventId(e) !== eventId));
+      setFilteredEvents((prev) => prev.filter((e) => getEventId(e) !== eventId));
       setDialogConfig({
         isOpen: true,
         title: 'Deleted',
@@ -64,7 +66,7 @@ const useAdminDashboard = () => {
   }, []);
 
   const handleDeleteEvent = useCallback(
-    (eventId: string, eventTitle: string) => {
+    (eventId: string | number, eventTitle: string) => {
       setDialogConfig({
         isOpen: true,
         title: 'Confirm Delete',
@@ -114,7 +116,7 @@ const useAdminDashboard = () => {
     } else {
       const filtered = events.filter(
         (event) =>
-          event.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+          event.title?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
           event.createdByName?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
           event.createdByEmail?.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       );

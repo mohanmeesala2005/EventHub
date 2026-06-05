@@ -262,7 +262,9 @@ type eventWithStats struct {
 
 // GetAllEventsWithStats handles GET /api/events/admin/events-with-stats (admin)
 func (h *EventHandler) GetAllEventsWithStats(c *gin.Context) {
-	result, err := h.EventService.GetAllEventsWithStats()
+	userID := getUserID(c)
+
+	result, err := h.EventService.GetEventsWithStatsByCreator(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch events with stats", "error": err.Error()})
 		return
@@ -272,7 +274,9 @@ func (h *EventHandler) GetAllEventsWithStats(c *gin.Context) {
 
 // GetAllRegistrations handles GET /api/events/admin/all-registrations (admin)
 func (h *EventHandler) GetAllRegistrations(c *gin.Context) {
-	registrations, err := h.EventService.GetAllRegistrations()
+	userID := getUserID(c)
+
+	registrations, err := h.EventService.GetRegistrationsForCreatedEvents(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to fetch all registrations", "error": err.Error()})
 		return

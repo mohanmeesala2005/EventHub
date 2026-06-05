@@ -17,15 +17,9 @@ const NavMobile: React.FC<Props> = ({ user, onClose, handleLogout }) => {
         <Link to="/events" className="block px-3 py-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white font-medium transition-colors" onClick={onClose}>
           Events
         </Link>
-        <Link to="/dashboard" className="block px-3 py-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white font-medium transition-colors" onClick={onClose}>
+        <Link to={user?.role === 'admin' ? '/admin/dashboard' : '/dashboard'} className="block px-3 py-3 rounded-lg hover:bg-slate-700 text-slate-300 hover:text-white font-medium transition-colors" onClick={onClose}>
           Dashboard
         </Link>
-
-        {user?.role === 'admin' && (
-          <Link to="/admin/dashboard" className="block px-3 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-medium transition-colors" onClick={onClose}>
-            Admin Dashboard
-          </Link>
-        )}
 
         {user ? (
           <>

@@ -134,9 +134,40 @@ func (s *EventService) GetAllEventsWithStats() ([]EventWithStats, error) {
 	return result, nil
 }
 
+func (s *EventService) GetEventsWithStatsByCreator(creatorID uint) ([]EventWithStats, error) {
+	var events []models.Event
+	if err := s.DB.Preload("Creator").Where("created_by_id = ?", creatorID).Order("date asc").Find(&events).Error; err != nil {
+		return nil, err
+	}
+	attachCreatorInfoList(events)
+
+	result := make([]EventWithStats, 0, len(events))
+	for _, ev := range events {
+		var count int64
+		if err := s.DB.Model(&models.EventRegistration{}).Where("event_id = ?", ev.ID).Count(&count).Error; err != nil {
+			return nil, err
+		}
+		result = append(result, EventWithStats{Event: ev, RegistrationCount: count})
+	}
+
+	return result, nil
+}
+
 func (s *EventService) GetAllRegistrations() ([]models.EventRegistration, error) {
 	var registrations []models.EventRegistration
 	if err := s.DB.Preload("Event").Preload("User").Order("created_at desc").Find(&registrations).Error; err != nil {
+		return nil, err
+	}
+	return registrations, nil
+}
+
+func (s *EventService) GetRegistrationsForCreatedEvents(creatorID uint) ([]models.EventRegistration, error) {
+	var registrations []models.EventRegistration
+	if err := s.DB.Preload("Event").Preload("User").
+		Joins("JOIN events ON events.id = event_registrations.event_id").
+		Where("events.created_by_id = ?", creatorID).
+		Order("event_registrations.created_at desc").
+		Find(&registrations).Error; err != nil {
 		return nil, err
 	}
 	return registrations, nil
